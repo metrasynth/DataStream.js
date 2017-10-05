@@ -1217,7 +1217,7 @@ DataStream.prototype.readType = function(t, struct) {
   if (typeof t == 'string' && /,/.test(t)) {
     var tp = t.split(",");
     t = tp[0];
-    charset = parseInt(tp[1]);
+    charset = tp[1];
   }
   switch(t) {
 
@@ -1412,7 +1412,7 @@ DataStream.prototype.writeType = function(t, v, struct) {
   if (typeof t == 'string' && /,/.test(t)) {
     var tp = t.split(",");
     t = tp[0];
-    charset = parseInt(tp[1]);
+    charset = tp[1];
   }
 
   switch(t) {

@@ -465,6 +465,22 @@
 	assertEqual(o5.len2, o5.greet2.length);
     assertEqual('World!', o5.greet2);
     assertEqualArray([0,0,0,0,0,0,0,255], o5.tail);
+
+    var def6 = [
+      'len', 'uint8',
+      'greet', 'string,utf-8:len'
+    ];
+    var greet = 'xin chào đỗữẫẨở';
+    // var greetData = new TextEncoder('utf-8').encode(greet);
+    // console.log(greetData, greetData.length, greet.length);
+    var u6 = [48,
+        120, 105, 110, 32, 99, 104, 195, 131, 194, 160, 111, 32, 195, 132, 226, 128, 152, 195, 161, 194, 187, 226, 128, 148, 195, 161, 194, 187, 194, 175, 195, 161, 194, 186, 194, 171, 195, 161, 194, 186, 194, 168, 195, 161, 194, 187, 197, 184
+    ];
+    var ds6 = new DataStream();
+    ds6.writeUint8Array(u6);
+    ds6.seek(0);
+    var o6 = ds6.readStruct(def6);
+    assertEqual(greet, o6.greet);
   };
 
   test_constructor();
