@@ -17,5 +17,17 @@
     "url": "https://github.com/kig/DataStream.js/issues"
   },
   "homepage": "https://github.com/kig/DataStream.js",
-  "readmeFilename": "README.md"
+  "readmeFilename": "README.md",
+  "dependencies": {
+    "text-encoding": "^0.6.4"
+  },
+  "devDependencies": {
+    "mocha": "^4.0.1",
+    "nyc": "^11.2.1",
+    "typescript": "^2.5.3",
+    "webpack": "^3.6.0"
+  },
+  "scripts": {
+    "test": "nyc mocha"
+  }
 }
