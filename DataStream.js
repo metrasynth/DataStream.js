@@ -1211,7 +1211,7 @@ DataStream.prototype.readType = function(t, struct) {
       lengthOverride = parseInt(struct[len]);
     } else {
       // assume literal integer e.g., 'string:4'
-      lengthOverride = parseInt(tp[1]);
+      lengthOverride = parseInt(len);
     }
   }
   if (typeof t == 'string' && /,/.test(t)) {
@@ -1374,18 +1374,54 @@ DataStream.prototype.readType = function(t, struct) {
 };
 
 /**
-  Writes a struct to the DataStream. Takes a structDefinition that gives the
-  types and a struct object that gives the values. Refer to readStruct for the
-  structure of structDefinition.
-
-  @param {Object} structDefinition Type definition of the struct.
-  @param {Object} struct The struct data object.
-  */
-DataStream.prototype.writeStruct = function(structDefinition, struct) {
+ * Writes a struct to the DataStream. Takes a structDefinition that gives the
+ * types and a struct object that gives the values. Refer to readStruct for the
+ * structure of structDefinition.
+ *
+ * @param {Object} structDefinition Type definition of the struct.
+ * @param {Object} struct The struct data object.
+ * @param needConvertStructDef if set (== true) then structDefinition will be convert using
+ *        `DataStream.defWriteStruct` before writing.
+ */
+DataStream.prototype.writeStruct = function(structDefinition, struct, needConvertStructDef) {
+  if(needConvertStructDef) {
+    structDefinition = DataStream.defWriteStruct(structDefinition, struct);
+  }
   for (var i = 0; i < structDefinition.length; i+=2) {
     var t = structDefinition[i+1];
     this.writeType(t, struct[structDefinition[i]], struct);
   }
+};
+/**
+ * Convert a struct definition using for `readStruct` to a struct definition that can be using for `writeStruct`
+ * @param readStructDef ex ['len', 'uint8', 'greet', 'string,utf-8:some_len_var_name']
+ * @param struct The actual struct will be writing, ex {greet: 'Xin Chào'}
+ * @return {Array<*>} the readStructDef with all string type that has encoding specified
+ *          (ex 'string,utf-8:some_len_var_name')
+ *            be replaced by a `function` that write the correspond string field in `struct` (ex, struct.greet)
+ * @side-effect struct is modified: struct.<some_len_var_name> is set = length of the string field
+ *          (ex, struct.greet) after encode.
+ */
+DataStream.defWriteStruct = function(readStructDef, struct) {
+    const ret = [];
+    for (var i = readStructDef.length - 2; i >= 0; i -= 2) {
+        var t = readStructDef[i + 1], v = readStructDef[i];
+        if (typeof(t) === 'string' && /,.+:[A-Za-z_]/.test(t)) {
+            var tp = t.split(":");
+            const len = tp[1];
+            tp = tp[0].split(',');
+            t = tp[0];
+            const charset = tp[1];
+
+            const uint8Array = new TextEncoder(charset).encode(struct[v]);
+            struct[len] = uint8Array.length;
+            ret.push(function (ds) { ds.writeUint8Array(uint8Array) })
+        } else {
+            ret.push(t)
+        }
+        ret.push(v);
+    }
+    return ret.reverse();
 };
 
 /**
@@ -1407,7 +1443,17 @@ DataStream.prototype.writeType = function(t, v, struct) {
   if (typeof(t) == 'string' && /:/.test(t)) {
     var tp = t.split(":");
     t = tp[0];
-    lengthOverride = parseInt(tp[1]);
+    var len = tp[1];
+
+    // allow length to be previously parsed variable
+    // e.g. 'string:fieldLength', if `fieldLength` has
+    // been parsed previously.
+    if (struct[len] != null) {
+        lengthOverride = parseInt(struct[len]);
+    } else {
+        // assume literal integer e.g., 'string:4'
+        lengthOverride = parseInt(len);
+    }
   }
   if (typeof t == 'string' && /,/.test(t)) {
     var tp = t.split(",");

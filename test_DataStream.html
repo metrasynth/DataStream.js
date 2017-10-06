@@ -481,6 +481,24 @@
     ds6.seek(0);
     var o6 = ds6.readStruct(def6);
     assertEqual(greet, o6.greet);
+
+    const ds6b = new DataStream();
+    ds6b.writeStruct(def6, o6);
+
+    const ds6c = new DataStream();
+
+    // struct to write don't have 'len' field
+    ds6c.writeStruct(def6, {greet: greet}, true);
+
+    ds6b.seek(0);
+    const o6b = ds6b.readStruct(def6);
+    ds6c.seek(0);
+    const o6c = ds6c.readStruct(def6);
+    assertEqual(JSON.stringify(o6), JSON.stringify(o6b));
+    assertEqual(JSON.stringify(o6), JSON.stringify(o6c));
+    assertEqualArray(u6, new Uint8Array(ds6.buffer));
+    assertEqualArray(u6, new Uint8Array(ds6b.buffer));
+    assertEqualArray(u6, new Uint8Array(ds6c.buffer));
   };
 
   test_constructor();
