@@ -1,9 +1,3 @@
-<html>
-<body></body>
-<script src="encoding-indexes.js"></script>
-<script src="encoding.js"></script>
-<script src="DataStream.js"></script>
-<script>
   function assert(b) {
     if (!b) {
       throw('assert failed');
@@ -649,6 +643,3 @@
   p.textContent = 'tests passed';
   document.body.appendChild(p);
   console.log('tests passed');
-
-</script>
-</html>
