@@ -1,0 +1,7 @@
+node_modules/
+/.idea/
+/.nyc_output/
+*.js
+*.js.map
+!webpack.config.js
+*.d.ts

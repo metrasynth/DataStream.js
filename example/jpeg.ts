@@ -1,15 +1,9 @@
-<html>
-  <head>
-    <script src="jpg.js"></script>
-    <script src="DataStream.js"></script>
-  </head>
-  <body>
-    <h1>JPEG marker reader</h1>
-    <h3>Select a JPEG or TIFF file</h3>
-    <input type="file"><br>
-    <pre></pre>
-    <script>
-document.querySelector('input[type="file"]').onchange = function(e) {
+import DataStream from "../DataStream";
+import jpeg = require("jpeg-js");
+
+document
+    .querySelector('input[type="file"]')
+    .addEventListener("change", function(e) {
   var reader = new FileReader();
 
   var tiffByteSize = {
@@ -25,7 +19,7 @@ document.querySelector('input[type="file"]').onchange = function(e) {
       if (s.count * tiffByteSize[s.type] > 4) {
         ds.seek(ds.readUint32());
       }
-      var v = {error: 'Unknown TIFF Field'};
+      var v: any = {error: 'Unknown TIFF Field'};
       switch (s.type) {
         case 1: v = ds.readUint8Array(s.count); break;
         case 2: v = ds.readString(s.count); break; 
@@ -49,7 +43,7 @@ document.querySelector('input[type="file"]').onchange = function(e) {
   ];
 
   var parseTIFF = function(u8) {
-    var rv = {};
+    var rv: any = {};
     var ds = new DataStream(u8);
     rv.endianness = ds.readString(2);
     ds.endianness = rv.endianness == 'MM' ? DataStream.BIG_ENDIAN : DataStream.LITTLE_ENDIAN;
@@ -61,11 +55,11 @@ document.querySelector('input[type="file"]').onchange = function(e) {
     rv.entries = h;
     rv.dirOffsets = [];
     while (true) {
-      numEntries = ds.readUint16();
+      const numEntries = ds.readUint16();
       for (var i = 0; i<numEntries; i++) {
         h.push(ds.readStruct(tiffTag));
       }
-      nextOff = ds.readUint32();
+      const nextOff = ds.readUint32();
       if (nextOff) {
         ds.seek(nextOff);
         rv.dirOffsets.push(nextOff);
@@ -183,7 +177,7 @@ document.querySelector('input[type="file"]').onchange = function(e) {
                   return ds.mapUint8Array(s.length - 2).length;
                 }
               }
-              break;
+              // break;
             case 0xFFE0: // APP0
               if (s.length >= 7) { // probably a JFIF
                 var p = ds.position;
@@ -216,7 +210,7 @@ document.querySelector('input[type="file"]').onchange = function(e) {
               } else {
                 return ds.mapUint8Array(s.length - 2).length;
               }
-              break;
+              // break;
             case 0xFFE2: // APP2, ICC Profile most likely
               return ds.readString(s.length-2);
             case 0xFFED: // APP13, IPTC / Photoshop IRB
@@ -240,10 +234,8 @@ document.querySelector('input[type="file"]').onchange = function(e) {
               }
               ds.position = p;
               return {components: cs, imageData: ds.mapUint8Array(i-1).length};
-              break;
             default:
               return ds.mapUint8Array(s.length - 2).length;
-              break;
             }
           }
         }
@@ -255,17 +247,15 @@ document.querySelector('input[type="file"]').onchange = function(e) {
     var ds = new DataStream(this.result);
     ds.endianness = DataStream.BIG_ENDIAN;
     var obj = ds.readStruct(jpegStruct) || parseTIFF(this.result);
-    pre = document.querySelector('pre');
+    const pre = document.querySelector('pre');
     if (obj) { 
       pre.textContent = JSON.stringify(obj, null, 4);
       if (obj.start) {
-        var j = new JpegImage();
-        j.parse(new Uint8Array(this.result));
+        const j = jpeg.decode(this.result);
         var c = document.createElement('canvas');
         c.width = j.width; c.height = j.height;
         var ctx = c.getContext('2d');
-        var id = ctx.getImageData(0,0,j.width, j.height);
-        j.copyToImageData(id);
+        const id = new ImageData(new Uint8ClampedArray(j.data), j.width, j.height);
         ctx.putImageData(id, 0,0);
         c.style.display = 'block';
         pre.appendChild(c);
@@ -276,8 +266,4 @@ document.querySelector('input[type="file"]').onchange = function(e) {
   };
 
   reader.readAsArrayBuffer(this.files[0]);
-};
-
-    </script>
-  </body>
-</html>
+    });
