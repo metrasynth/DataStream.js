@@ -15,273 +15,265 @@
     var sameMembers = function (typedArr, arr, msg) {
         return chai_1.assert.sameMembers(Array.from(typedArr), arr, msg);
     };
-    /*
-      var testType = (ds, t, elen) => test('Type:' + t, assert => {
-        var i = 0;
-        var boff = ds.byteOffset;
-        var blen = ds.byteLength;
-        ds.dynamicSize = true;
-        ds.endianness = DataStream.LITTLE_ENDIAN;
-        ds.seek(0);
-        for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
-          ds["write"+t](125);
-        }
-        expect(ds.position ).to.equal(elen*i);
-        expect(ds.byteLength ).to.equal(blen);
-        expect(ds.buffer.byteLength ).to.equal(ds.byteLength+boff);
-        ds.seek(0);
-        for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
-          expect(ds["read"+t]()).to.equal(125);
-        }
-        expect(ds.position ).to.equal(elen*i);
-        expect(ds.byteLength ).to.equal(blen);
-        expect(ds.buffer.byteLength ).to.equal(ds.byteLength+boff);
-        ds.endianness = DataStream.BIG_ENDIAN;
-        ds.seek(0);
-        if (elen > 1) {
-          for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
-            expect(ds["read"+t]()).to.not.equal(125);
-          }
-        }
-        ds.seek(0);
-        for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
-          ds["write"+t](125);
-        }
-        expect(ds.position ).to.equal(elen*i);
-        expect(ds.byteLength ).to.equal(blen);
-        expect(ds.buffer.byteLength ).to.equal(ds.byteLength+boff);
-        ds.seek(0);
-        for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
-          expect(ds["read"+t]()).to.equal(125);
-        }
-        expect(ds.position ).to.equal(elen*i);
-        expect(ds.byteLength ).to.equal(blen);
-        expect(ds.buffer.byteLength ).to.equal(ds.byteLength+boff);
-        assert.throws(function() {
-          ds["read"+t]();
-        });
-        ds.dynamicSize = false;
-        assert.throws(function() {
-          ds["write"+t](125);
-        });
-        testTypeArray(ds, t, elen);
-      });
-    
-      var testSubArray = (typedArrayConstructor, t, arr) => test('SubArray:' + t, assert => {
-          var typedArr = new typedArrayConstructor(arr);
-          var ds = new DataStream();
-          ds["write" + t + "Array"](typedArr.subarray(1));
-          ds.seek(0);
-          var outSubArray = ds["read" + t + "Array"](arr.length - 1);
-          expect(typedArr.subarray(1)).to.deep.equal(outSubArray);
-      });
-    
-      var testDS = (i, ds, boff, blen, t, elen, arr) => test('DS:' + t, assert => {
-        ds.dynamicSize = true;
-        ds.endianness = DataStream.LITTLE_ENDIAN;
-    
-        ds.seek(0);
-        ds["write"+t+"Array"](arr);
-        expect(ds.position ).to.equal(elen*i);
-        expect(ds.byteLength ).to.equal(blen);
-        expect(ds.buffer.byteLength ).to.equal(ds.byteLength+boff);
-        ds.seek(0);
-        var rarr = ds["read"+t+"Array"](arr.length);
-        testSubArray(rarr.constructor, t, arr);
-        ds.seek(0);
-        var rarr2 = [];
-        for (i=0; i<arr.length; i++) {
-          rarr2.push(ds["read"+t]());
-        }
-        for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
-          expect(rarr[i]).to.equal(arr[i]);
-          expect(rarr[i]).to.equal(rarr2[i]);
-        }
-        expect(ds.position ).to.equal(elen*i);
-        expect(ds.byteLength ).to.equal(blen);
-        expect(ds.buffer.byteLength ).to.equal(ds.byteLength+boff);
-    
-        ds.seek(0);
-        for (var i=0; i<arr.length; i++) {
-          ds["write"+t](arr[i]);
-        }
-        expect(ds.position ).to.equal(elen*i);
-        expect(ds.byteLength ).to.equal(blen);
-        expect(ds.buffer.byteLength ).to.equal(ds.byteLength+boff);
-        ds.seek(0);
-        var rarr = ds["read"+t+"Array"](arr.length);
-        for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
-          expect(rarr[i]).to.equal(arr[i]);
-        }
-        expect(ds.position ).to.equal(elen*i);
-        expect(ds.byteLength ).to.equal(blen);
-        expect(ds.buffer.byteLength ).to.equal(ds.byteLength+boff);
-    
-        // Map tests
-        if ((ds.byteOffset & rarr.BYTES_PER_ELEMENT) === 0) {
-    
-    
-        ds.seek(0);
-        var rarr = ds["map"+t+"Array"](arr.length);
-        ds.seek(0);
-        for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
-          expect(rarr[i]).to.equal(arr[i]);
-          rarr[i] = 127;
-        }
-        ds.seek(0);
-        var warr = ds["read"+t+"Array"](arr.length);
-        for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
-          expect(warr[i]).to.equal(127);
-        }
-        ds.endianness = DataStream.BIG_ENDIAN;
-        ds.seek(0);
-        var rarr = ds["map"+t+"Array"](arr.length);
-        ds.seek(0);
-        for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
-          expect(rarr[i]).to.not.equal(arr[i]);
-          rarr[i] = 127;
-        }
-        ds.seek(0);
-        if (elen > 1) {
-        var warr = ds["read"+t+"Array"](arr.length);
-          for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
-            expect(warr[i]).to.not.equal(127);
-          }
-        }
-        ds.seek(0);
-        ds["map"+t+"Array"](arr.length);
-        ds.seek(0);
-        var warr = ds["read"+t+"Array"](arr.length);
-        for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
-          expect(warr[i]).to.equal(127);
-        }
-        expect(ds.position ).to.equal(elen*i);
-        expect(ds.byteLength ).to.equal(blen);
-        expect(ds.buffer.byteLength ).to.equal(ds.byteLength+boff);
-        ds.endianness = DataStream.BIG_ENDIAN;
-        ds.seek(0);
-        var rarr = ds["read"+t+"Array"](arr.length);
-        if (elen > 1) {
-          for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
-            expect(rarr[i]).to.not.equal(arr[i]);
-          }
-        }
-        }
-    
-        ds.seek(0);
-        ds["write"+t+"Array"](arr);
-        expect(ds.position ).to.equal(elen*i);
-        expect(ds.byteLength ).to.equal(blen);
-        expect(ds.buffer.byteLength ).to.equal(ds.byteLength+boff);
-        ds.seek(0);
-        var rarr = ds["read"+t+"Array"](arr.length);
-        for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
-          expect(rarr[i]).to.equal(arr[i]);
-        }
-        ds.seek(0);
-        for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
-          expect(ds["read"+t]()).to.equal(arr[i]);
-        }
-        expect(ds.position ).to.equal(elen*i);
-        expect(ds.byteLength ).to.equal(blen);
-        expect(ds.buffer.byteLength ).to.equal(ds.byteLength+boff);
-        assert.throws(function() {
-          ds["read"+t+"Array"](1);
-        });
-        ds.dynamicSize = false;
-        assert.throws(function() {
-          ds["write"+t+"Array"]([125]);
-        });
-        var ds2 = new DataStream();
-        ds2["write"+t+"Array"](arr);
-        ds2.seek(0);
-        var rarr = ds2["read"+t+"Array"](arr.length);
-        for (i=0; i<ds2.byteLength/elen; i++) {
-          expect(rarr[i]).to.equal(arr[i]);
-        }
-        ds2.buffer;
-        assert.throws(function() {
-          ds2["read"+t+"Array"](1);
-        });
-      });
-    
-      var testTypeArray = (ds, t, elen)=> test('SubArray:' + t, assert => {
-        var i = 0;
-        var boff = ds.byteOffset;
-        var blen = ds.byteLength;
-        var arr: any = [];
-        for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
-          arr.push((125 + i) % 127);
-        }
-        testDS(i, ds, boff, blen, t, elen, arr);
-        var arr = new this[t+"Array"](ds.byteLength/elen);
-        for (i=0; i<arr.length; i++) {
-          arr[i] = (125 + i) % 127;
-        }
-        testDS(i, ds, boff, blen, t, elen, arr);
-      });
-    */
+    var TypedArrays = { Int8Array: Int8Array, Uint8Array: Uint8Array, Uint8ClampedArray: Uint8ClampedArray, Int16Array: Int16Array, Uint16Array: Uint16Array, Int32Array: Int32Array, Uint32Array: Uint32Array, Float32Array: Float32Array, Float64Array: Float64Array };
     describe('DataStream', function () {
+        var testType = function (ds, t, elen) {
+            var i = 0;
+            var boff = ds.byteOffset;
+            var blen = ds.byteLength;
+            ds.dynamicSize = true;
+            ds.endianness = DataStream_1.default.LITTLE_ENDIAN;
+            ds.seek(0);
+            for (i = 0; i < Math.floor(ds.byteLength / elen); i++) {
+                ds["write" + t](125);
+            }
+            chai_1.assert.equal(ds.position, elen * i);
+            chai_1.assert.equal(ds.byteLength, blen);
+            chai_1.assert.equal(ds.buffer.byteLength, ds.byteLength + boff);
+            ds.seek(0);
+            for (i = 0; i < Math.floor(ds.byteLength / elen); i++) {
+                chai_1.assert.equal(ds["read" + t](), 125);
+            }
+            chai_1.assert.equal(ds.position, elen * i);
+            chai_1.assert.equal(ds.byteLength, blen);
+            chai_1.assert.equal(ds.buffer.byteLength, ds.byteLength + boff);
+            ds.endianness = DataStream_1.default.BIG_ENDIAN;
+            ds.seek(0);
+            if (elen > 1) {
+                for (i = 0; i < Math.floor(ds.byteLength / elen); i++) {
+                    chai_1.assert.notEqual(ds["read" + t](), 125);
+                }
+            }
+            ds.seek(0);
+            for (i = 0; i < Math.floor(ds.byteLength / elen); i++) {
+                ds["write" + t](125);
+            }
+            chai_1.assert.equal(ds.position, elen * i);
+            chai_1.assert.equal(ds.byteLength, blen);
+            chai_1.assert.equal(ds.buffer.byteLength, ds.byteLength + boff);
+            ds.seek(0);
+            for (i = 0; i < Math.floor(ds.byteLength / elen); i++) {
+                chai_1.assert.equal(ds["read" + t](), 125);
+            }
+            chai_1.assert.equal(ds.position, elen * i);
+            chai_1.assert.equal(ds.byteLength, blen);
+            chai_1.assert.equal(ds.buffer.byteLength, ds.byteLength + boff);
+            chai_1.assert.throws(function () {
+                ds["read" + t]();
+            });
+            ds.dynamicSize = false;
+            chai_1.assert.throws(function () {
+                ds["write" + t](125);
+            });
+            testTypeArray(ds, t, elen);
+        };
+        var testSubArray = function (typedArrayConstructor, t, arr) {
+            var typedArr = new typedArrayConstructor(arr);
+            var ds = new DataStream_1.default();
+            ds["write" + t + "Array"](typedArr.subarray(1));
+            ds.seek(0);
+            var outSubArray = ds["read" + t + "Array"](arr.length - 1);
+            chai_1.expect(typedArr.subarray(1)).to.deep.equal(outSubArray);
+        };
+        var testDS = function (i, ds, boff, blen, t, elen, arr) {
+            ds.dynamicSize = true;
+            ds.endianness = DataStream_1.default.LITTLE_ENDIAN;
+            ds.seek(0);
+            ds["write" + t + "Array"](arr);
+            chai_1.assert.equal(ds.position, elen * i);
+            chai_1.assert.equal(ds.byteLength, blen);
+            chai_1.assert.equal(ds.buffer.byteLength, ds.byteLength + boff);
+            ds.seek(0);
+            var rarr = ds["read" + t + "Array"](arr.length);
+            testSubArray(rarr.constructor, t, arr);
+            ds.seek(0);
+            var rarr2 = [];
+            for (i = 0; i < arr.length; i++) {
+                rarr2.push(ds["read" + t]());
+            }
+            for (i = 0; i < Math.floor(ds.byteLength / elen); i++) {
+                chai_1.assert.equal(rarr[i], arr[i]);
+                chai_1.assert.equal(rarr[i], rarr2[i]);
+            }
+            chai_1.assert.equal(ds.position, elen * i);
+            chai_1.assert.equal(ds.byteLength, blen);
+            chai_1.assert.equal(ds.buffer.byteLength, ds.byteLength + boff);
+            ds.seek(0);
+            for (var _i = 0, arr_1 = arr; _i < arr_1.length; _i++) {
+                var a = arr_1[_i];
+                ds["write" + t](a);
+            }
+            chai_1.assert.equal(ds.position, elen * i);
+            chai_1.assert.equal(ds.byteLength, blen);
+            chai_1.assert.equal(ds.buffer.byteLength, ds.byteLength + boff);
+            ds.seek(0);
+            var rarr = ds["read" + t + "Array"](arr.length);
+            for (i = 0; i < Math.floor(ds.byteLength / elen); i++) {
+                chai_1.assert.equal(rarr[i], arr[i]);
+            }
+            chai_1.assert.equal(ds.position, elen * i);
+            chai_1.assert.equal(ds.byteLength, blen);
+            chai_1.assert.equal(ds.buffer.byteLength, ds.byteLength + boff);
+            // Map tests
+            console.log(t, arr.length, ds.byteOffset % rarr.BYTES_PER_ELEMENT === 0);
+            if (ds.byteOffset % rarr.BYTES_PER_ELEMENT === 0) {
+                ds.seek(0);
+                var rarr = ds["map" + t + "Array"](arr.length);
+                ds.seek(0);
+                for (i = 0; i < Math.floor(ds.byteLength / elen); i++) {
+                    chai_1.assert.equal(rarr[i], arr[i]);
+                    rarr[i] = 127;
+                }
+                ds.seek(0);
+                var warr = ds["read" + t + "Array"](arr.length);
+                for (i = 0; i < Math.floor(ds.byteLength / elen); i++) {
+                    chai_1.assert.equal(warr[i], 127);
+                }
+                ds.endianness = DataStream_1.default.BIG_ENDIAN;
+                ds.seek(0);
+                var rarr = ds["map" + t + "Array"](arr.length);
+                ds.seek(0);
+                for (i = 0; i < Math.floor(ds.byteLength / elen); i++) {
+                    chai_1.assert.notEqual(rarr[i], arr[i]);
+                    rarr[i] = 127;
+                }
+                ds.seek(0);
+                if (elen > 1) {
+                    var warr = ds["read" + t + "Array"](arr.length);
+                    for (i = 0; i < Math.floor(ds.byteLength / elen); i++) {
+                        chai_1.assert.notEqual(warr[i], 127);
+                    }
+                }
+                ds.seek(0);
+                ds["map" + t + "Array"](arr.length);
+                ds.seek(0);
+                var warr = ds["read" + t + "Array"](arr.length);
+                for (i = 0; i < Math.floor(ds.byteLength / elen); i++) {
+                    chai_1.assert.equal(warr[i], 127);
+                }
+                chai_1.assert.equal(ds.position, elen * i);
+                chai_1.assert.equal(ds.byteLength, blen);
+                chai_1.assert.equal(ds.buffer.byteLength, ds.byteLength + boff);
+                ds.endianness = DataStream_1.default.BIG_ENDIAN;
+                ds.seek(0);
+                var rarr = ds["read" + t + "Array"](arr.length);
+                if (elen > 1) {
+                    for (i = 0; i < Math.floor(ds.byteLength / elen); i++) {
+                        chai_1.assert.notEqual(rarr[i], arr[i]);
+                    }
+                }
+            }
+            ds.seek(0);
+            ds["write" + t + "Array"](arr);
+            chai_1.assert.equal(ds.position, elen * i);
+            chai_1.assert.equal(ds.byteLength, blen);
+            chai_1.assert.equal(ds.buffer.byteLength, ds.byteLength + boff);
+            ds.seek(0);
+            var rarr = ds["read" + t + "Array"](arr.length);
+            for (i = 0; i < Math.floor(ds.byteLength / elen); i++) {
+                chai_1.assert.equal(rarr[i], arr[i]);
+            }
+            ds.seek(0);
+            for (i = 0; i < Math.floor(ds.byteLength / elen); i++) {
+                chai_1.assert.equal(ds["read" + t](), arr[i]);
+            }
+            chai_1.assert.equal(ds.position, elen * i);
+            chai_1.assert.equal(ds.byteLength, blen);
+            chai_1.assert.equal(ds.buffer.byteLength, ds.byteLength + boff);
+            chai_1.assert.throws(function () {
+                ds["read" + t + "Array"](1);
+            });
+            ds.dynamicSize = false;
+            chai_1.assert.throws(function () {
+                ds["write" + t + "Array"]([125]);
+            });
+            var ds2 = new DataStream_1.default();
+            ds2["write" + t + "Array"](arr);
+            ds2.seek(0);
+            var rarr = ds2["read" + t + "Array"](arr.length);
+            for (i = 0; i < ds2.byteLength / elen; i++) {
+                chai_1.assert.equal(rarr[i], arr[i]);
+            }
+            ds2.buffer;
+            chai_1.assert.throws(function () {
+                ds2["read" + t + "Array"](1);
+            });
+        };
+        var testTypeArray = function (ds, t, elen) {
+            var i = 0;
+            var boff = ds.byteOffset;
+            var blen = ds.byteLength;
+            var arr = [];
+            for (i = 0; i < Math.floor(ds.byteLength / elen); i++) {
+                arr.push((125 + i) % 127);
+            }
+            testDS(i, ds, boff, blen, t, elen, arr);
+            var arr = new TypedArrays[t + "Array"](ds.byteLength / elen);
+            for (i = 0; i < arr.length; i++) {
+                arr[i] = (125 + i) % 127;
+            }
+            testDS(i, ds, boff, blen, t, elen, arr);
+        };
         it('constructor', function () {
             var buf = new ArrayBuffer(100);
             var ds = new DataStream_1.default(buf);
-            chai_1.expect(ds.byteLength).to.equal(buf.byteLength);
-            chai_1.expect(ds.endianness).to.equal(DataStream_1.default.LITTLE_ENDIAN);
+            chai_1.assert.equal(ds.byteLength, buf.byteLength);
+            chai_1.assert.equal(ds.endianness, DataStream_1.default.LITTLE_ENDIAN);
             for (var i = 0; i < 100; i++) {
                 ds = new DataStream_1.default(buf, i);
                 ds = new DataStream_1.default(buf, i, DataStream_1.default.BIG_ENDIAN);
                 ds = new DataStream_1.default(buf, i, DataStream_1.default.LITTLE_ENDIAN);
-                chai_1.expect(ds.byteLength).to.equal(buf.byteLength - i);
-                chai_1.expect(ds.byteOffset).to.equal(i);
+                chai_1.assert.equal(ds.byteLength, buf.byteLength - i);
+                chai_1.assert.equal(ds.byteOffset, i);
             }
             ds = new DataStream_1.default(buf, 2, DataStream_1.default.BIG_ENDIAN);
-            chai_1.expect(ds.endianness).to.equal(DataStream_1.default.BIG_ENDIAN);
+            chai_1.assert.equal(ds.endianness, DataStream_1.default.BIG_ENDIAN);
             ds = new DataStream_1.default(buf, null, DataStream_1.default.BIG_ENDIAN);
-            chai_1.expect(ds.endianness).to.equal(DataStream_1.default.BIG_ENDIAN);
-            chai_1.expect(ds.byteLength).to.equal(buf.byteLength);
+            chai_1.assert.equal(ds.endianness, DataStream_1.default.BIG_ENDIAN);
+            chai_1.assert.equal(ds.byteLength, buf.byteLength);
             ds = new DataStream_1.default(buf, null, DataStream_1.default.LITTLE_ENDIAN);
-            chai_1.expect(ds.endianness).to.equal(DataStream_1.default.LITTLE_ENDIAN);
-            chai_1.expect(ds.byteLength).to.equal(buf.byteLength);
+            chai_1.assert.equal(ds.endianness, DataStream_1.default.LITTLE_ENDIAN);
+            chai_1.assert.equal(ds.byteLength, buf.byteLength);
             var dv = new DataView(buf);
             ds = new DataStream_1.default(dv, 0, DataStream_1.default.BIG_ENDIAN);
-            chai_1.expect(ds.endianness).to.equal(DataStream_1.default.BIG_ENDIAN);
-            chai_1.expect(ds.byteLength).to.equal(buf.byteLength);
-            chai_1.expect(ds.byteOffset).to.equal(dv.byteOffset);
+            chai_1.assert.equal(ds.endianness, DataStream_1.default.BIG_ENDIAN);
+            chai_1.assert.equal(ds.byteLength, buf.byteLength);
+            chai_1.assert.equal(ds.byteOffset, dv.byteOffset);
             for (var i = 0; i < 100; i++) {
                 dv = new DataView(buf, i);
                 ds = new DataStream_1.default(dv);
-                chai_1.expect(ds.byteLength).to.equal(buf.byteLength - i);
-                chai_1.expect(ds.byteOffset).to.equal(dv.byteOffset);
+                chai_1.assert.equal(ds.byteLength, buf.byteLength - i);
+                chai_1.assert.equal(ds.byteOffset, dv.byteOffset);
             }
             for (var i = 0; i < 50; i++) {
                 dv = new DataView(buf, 50);
                 ds = new DataStream_1.default(dv, i);
-                chai_1.expect(ds.byteLength).to.equal(buf.byteLength - i - dv.byteOffset);
-                chai_1.expect(ds.byteOffset).to.equal(dv.byteOffset + i);
+                chai_1.assert.equal(ds.byteLength, buf.byteLength - i - dv.byteOffset);
+                chai_1.assert.equal(ds.byteOffset, dv.byteOffset + i);
             }
             for (var i = 0; i < 100; i++) {
                 dv = new Uint8Array(buf, i);
                 ds = new DataStream_1.default(dv);
-                chai_1.expect(ds.byteLength).to.equal(buf.byteLength - i);
-                chai_1.expect(ds.byteOffset).to.equal(dv.byteOffset);
+                chai_1.assert.equal(ds.byteLength, buf.byteLength - i);
+                chai_1.assert.equal(ds.byteOffset, dv.byteOffset);
             }
             for (var i = 0; i < 50; i++) {
                 dv = new Uint8Array(buf, 50);
                 ds = new DataStream_1.default(dv, i);
-                chai_1.expect(ds.byteLength).to.equal(buf.byteLength - i - dv.byteOffset);
-                chai_1.expect(ds.byteOffset).to.equal(dv.byteOffset + i);
+                chai_1.assert.equal(ds.byteLength, buf.byteLength - i - dv.byteOffset);
+                chai_1.assert.equal(ds.byteOffset, dv.byteOffset + i);
             }
             for (var i = 0; i < 25; i++) {
                 dv = new Float32Array(buf, i * 4);
                 ds = new DataStream_1.default(dv);
-                chai_1.expect(ds.byteLength).to.equal(buf.byteLength - i * 4);
-                chai_1.expect(ds.byteOffset).to.equal(dv.byteOffset);
+                chai_1.assert.equal(ds.byteLength, buf.byteLength - i * 4);
+                chai_1.assert.equal(ds.byteOffset, dv.byteOffset);
             }
             for (var i = 0; i < 12; i++) {
                 dv = new Float32Array(buf, 12);
                 ds = new DataStream_1.default(dv, i);
-                chai_1.expect(ds.byteLength).to.equal(buf.byteLength - i - dv.byteOffset);
-                chai_1.expect(ds.byteOffset).to.equal(dv.byteOffset + i);
+                chai_1.assert.equal(ds.byteLength, buf.byteLength - i - dv.byteOffset);
+                chai_1.assert.equal(ds.byteOffset, dv.byteOffset + i);
             }
         });
         it('Struct', function () {
@@ -316,8 +308,8 @@
             var d2 = obj2.data;
             delete obj.data;
             delete obj2.data;
-            chai_1.expect(255).to.equal(obj.endNote);
-            chai_1.expect(255).to.equal(obj2.endNote);
+            chai_1.assert.equal(255, obj.endNote);
+            chai_1.assert.equal(255, obj2.endNote);
             chai_1.expect(obj).to.deep.equal(obj2);
             chai_1.expect(d1).to.deep.equal(d2);
             var p = ds.position;
@@ -329,7 +321,7 @@
             var d3 = obj3.data;
             delete obj3.data;
             ds.seek(p);
-            chai_1.expect(255).to.equal(obj3.endNote);
+            chai_1.assert.equal(255, obj3.endNote);
             sameMembers(ds.readUint8Array(u.length), u);
             chai_1.expect(obj).to.deep.equal(obj3);
             chai_1.expect(d1).to.deep.equal(d3);
@@ -345,22 +337,22 @@
             ds2.seek(0);
             ds2.endianness = DataStream_1.default.LITTLE_ENDIAN;
             var o2 = ds2.readStruct(def2);
-            chai_1.expect(o2.one).to.equal(1);
-            chai_1.expect(o2.four).to.equal(1);
-            chai_1.expect(o2.two).to.not.equal(o2.three);
-            chai_1.expect(o2.one).to.equal(o2.four);
-            chai_1.expect(o2.one).to.equal(o2.three);
-            chai_1.expect(o2.one /*LE*/).to.not.equal(o2.two /*BE*/);
-            chai_1.expect(o2.one /*LE*/).to.equal(o2.three /*LE*/);
+            chai_1.assert.equal(o2.one, 1);
+            chai_1.assert.equal(o2.four, 1);
+            chai_1.assert.notEqual(o2.two, o2.three);
+            chai_1.assert.equal(o2.one, o2.four);
+            chai_1.assert.equal(o2.one, o2.three);
+            chai_1.assert.notEqual(o2.one /*LE*/, o2.two /*BE*/);
+            chai_1.assert.equal(o2.one /*LE*/, o2.three /*LE*/);
             ds2.seek(0);
             ds2.endianness = DataStream_1.default.BIG_ENDIAN;
             o2 = ds2.readStruct(def2);
-            chai_1.expect(o2.one).to.not.equal(1);
-            chai_1.expect(o2.four).to.not.equal(1);
-            chai_1.expect(o2.two).to.not.equal(o2.three);
-            chai_1.expect(o2.one).to.equal(o2.four);
-            chai_1.expect(o2.one /*BE*/).to.equal(o2.two /*BE*/);
-            chai_1.expect(o2.one /*BE*/).to.not.equal(o2.three /*LE*/);
+            chai_1.assert.notEqual(o2.one, 1);
+            chai_1.assert.notEqual(o2.four, 1);
+            chai_1.assert.notEqual(o2.two, o2.three);
+            chai_1.assert.equal(o2.one, o2.four);
+            chai_1.assert.equal(o2.one /*BE*/, o2.two /*BE*/);
+            chai_1.assert.notEqual(o2.one /*BE*/, o2.three /*LE*/);
             var def3 = [
                 'length', 'uint16be',
                 'data', ['[]', 'uint8', function (s) { return s.length - 2; }],
@@ -371,8 +363,8 @@
             ds3.writeUint8Array(u3);
             ds3.seek(0);
             var o3 = ds3.readStruct(def3);
-            chai_1.expect(o3.length).to.equal(8);
-            chai_1.expect(o3.endNote).to.equal(255);
+            chai_1.assert.equal(o3.length, 8);
+            chai_1.assert.equal(o3.endNote, 255);
             sameMembers(o3.data, [1, 2, 3, 4, 5, 6]);
             var def4 = [
                 'length', 'uint16be',
@@ -397,8 +389,8 @@
             var u4 = [0, 8, 1, 2, 3, 4, 5, 6, 255];
             var ds4 = new DataStream_1.default(new Uint8Array(u4));
             var o4 = ds4.readStruct(def4);
-            chai_1.expect(o4.length).to.equal(8);
-            chai_1.expect(o4.endNote).to.equal(255);
+            chai_1.assert.equal(o4.length, 8);
+            chai_1.assert.equal(o4.endNote, 255);
             chai_1.expect(o4.data.odd).to.deep.equal([1, 3, 5]);
             chai_1.expect(o4.data.even).to.deep.equal([2, 4, 6]);
             var pos = ds4.position;
@@ -426,11 +418,11 @@
             ds5.writeUint8Array(u5);
             ds5.seek(0);
             var o5 = ds5.readStruct(def5);
-            chai_1.expect(o5.len).to.equal(o5.greet.length);
-            chai_1.expect('Hello').to.equal(o5.greet);
-            chai_1.expect(', ').to.equal(o5.pad);
-            chai_1.expect(o5.len2).to.equal(o5.greet2.length);
-            chai_1.expect('World!').to.equal(o5.greet2);
+            chai_1.assert.equal(o5.len, o5.greet.length);
+            chai_1.assert.equal('Hello', o5.greet);
+            chai_1.assert.equal(', ', o5.pad);
+            chai_1.assert.equal(o5.len2, o5.greet2.length);
+            chai_1.assert.equal('World!', o5.greet2);
             sameMembers(o5.tail, [0, 0, 0, 0, 0, 0, 0, 255]);
             var def6 = [
                 'len', 'uint8',
@@ -446,7 +438,7 @@
             ds6.writeUint8Array(u6);
             ds6.seek(0);
             var o6 = ds6.readStruct(def6);
-            chai_1.expect(greet).to.equal(o6.greet);
+            chai_1.assert.equal(greet, o6.greet);
             var ds6b = new DataStream_1.default();
             ds6b.writeStruct(def6, o6);
             var ds6c = new DataStream_1.default();
@@ -462,147 +454,130 @@
             sameMembers(new Uint8Array(ds6b.buffer), u6);
             sameMembers(new Uint8Array(ds6c.buffer), u6);
         });
+        it('endianness', function () {
+            chai_1.assert(DataStream_1.default.endianness === DataStream_1.default.LITTLE_ENDIAN || DataStream_1.default.endianness === DataStream_1.default.BIG_ENDIAN, "Err, DataStream.endianness should be DataStream.LITTLE_ENDIAN or DataStream.BIG_ENDIAN");
+        });
+        it('other', function () {
+            var buf = new ArrayBuffer(1064);
+            var ds = new DataStream_1.default(buf, 64);
+            chai_1.assert.equal(ds.byteLength + 64, buf.byteLength);
+            ds.endianness = DataStream_1.default.LITTLE_ENDIAN;
+            ds.writeUint16(1);
+            ds.seek(0);
+            var a = ds.readUint8Array(2);
+            chai_1.assert.equal(a[0], 1);
+            chai_1.assert.equal(a[1], 0);
+            ds.seek(0);
+            ds.endianness = DataStream_1.default.BIG_ENDIAN;
+            ds.writeUint16(1);
+            ds.seek(0);
+            var a = ds.readUint8Array(2);
+            chai_1.assert.equal(a[0], 0);
+            chai_1.assert.equal(a[1], 1);
+            ds.seek(0);
+            ds.endianness = DataStream_1.default.LITTLE_ENDIAN;
+            for (var i = 0; i < 1000 / 8; i++) {
+                ds.writeFloat64(0.125);
+            }
+            chai_1.assert.equal(ds.position + 64, buf.byteLength);
+            chai_1.assert.equal(ds.byteLength + 64, buf.byteLength);
+            chai_1.assert.equal(ds.buffer.byteLength, buf.byteLength);
+            ds.seek(0);
+            for (var i = 0; i < 1000 / 8; i++) {
+                chai_1.assert.equal(0.125, ds.readFloat64());
+            }
+            chai_1.assert.equal(ds.position + 64, buf.byteLength);
+            chai_1.assert.throws(function () {
+                ds.readFloat32();
+            });
+            ds.seek(0);
+            ds.endianness = DataStream_1.default.BIG_ENDIAN;
+            for (var i = 0; i < 1000 / 8; i++) {
+                chai_1.assert.notEqual(0.125, ds.readFloat64());
+            }
+            ds.seek(0);
+            for (var i = 0; i < 999; i++) {
+                ds.writeFloat32(0.125);
+            }
+            // reading beyond extended buffer succeeds for performance reasons
+            ds.readFloat32();
+            chai_1.assert.equal(ds.position, 4000);
+            chai_1.assert.equal(ds.byteLength, 3996);
+            chai_1.assert.equal(ds.buffer.byteLength, 3996 + 64);
+            ds.position = 3996;
+            // but fails after getting buffer due to _trimAlloc
+            chai_1.assert.throws(function () {
+                ds.readFloat32();
+            });
+            ds.seek(0);
+            for (var i = 0; i < 999; i++) {
+                chai_1.assert.equal(0.125, ds.readFloat32());
+            }
+            chai_1.assert.equal(ds.position + 64, ds.buffer.byteLength);
+            ds.writeFloat32(0.125);
+            ds.dynamicSize = false;
+            chai_1.assert.throws(function () {
+                ds.writeFloat32(0.125);
+            });
+            chai_1.assert.equal(ds.position, 4000);
+            chai_1.assert.equal(ds.byteLength, 4000);
+            chai_1.assert.equal(ds.buffer.byteLength, ds.position + 64);
+            testType(ds, 'Int32', 4);
+            testType(ds, 'Int16', 2);
+            testType(ds, 'Int8', 1);
+            testType(ds, 'Uint32', 4);
+            testType(ds, 'Uint16', 2);
+            testType(ds, 'Uint8', 1);
+            testType(ds, 'Float32', 4);
+            testType(ds, 'Float64', 8);
+            ds = new DataStream_1.default(buf, 7);
+            testType(ds, 'Int32', 4);
+            testType(ds, 'Int16', 2);
+            testType(ds, 'Int8', 1);
+            testType(ds, 'Uint32', 4);
+            testType(ds, 'Uint16', 2);
+            testType(ds, 'Uint8', 1);
+            testType(ds, 'Float32', 4);
+            testType(ds, 'Float64', 8);
+            var s = "Hello, 世界";
+            var dss = new DataStream_1.default();
+            dss.writeUCS2String(s);
+            dss.seek(0);
+            chai_1.assert.equal(s, dss.readUCS2String(s.length));
+            var s = "Exif\\000\\000";
+            var dss = new DataStream_1.default();
+            dss.writeString(s);
+            dss.seek(0);
+            chai_1.assert.equal(s, dss.readString(s.length));
+            var dss = new DataStream_1.default();
+            var s = "Hello, World!";
+            dss.writeCString(s);
+            chai_1.assert.equal(dss.byteLength, s.length + 1);
+            dss.seek(0);
+            chai_1.assert.equal(s, dss.readCString());
+            var dp = dss.position;
+            dss.writeCString(s, s.length); // no zero terminate
+            dss.seek(dp);
+            chai_1.assert.equal(s, dss.readCString());
+            dss.writeCString(s, s.length); // no zero terminate
+            dss.seek(dp);
+            chai_1.assert.equal(s, dss.readCString(s.length));
+            dss.buffer;
+            chai_1.assert.equal(s, dss.readCString());
+            var dss = new DataStream_1.default();
+            var s = "Hello, 世界";
+            dss.writeString(s, 'UTF-8');
+            var bl = dss.byteLength;
+            dss.seek(0);
+            chai_1.assert.equal(s, dss.readString(dss.byteLength, 'UTF-8'));
+            // ugh, byte-counted UTF-8 strings :(
+            var dss = new DataStream_1.default();
+            var s = "Hello, me";
+            dss.writeString(s, 'UTF-8');
+            chai_1.assert.notEqual(bl, dss.byteLength);
+            dss.seek(0);
+            chai_1.assert.equal(s, dss.readString(dss.byteLength, 'UTF-8'));
+        });
     });
 });
-/*
-  if (DataStream.endianness != DataStream.LITTLE_ENDIAN && DataStream.endianness != DataStream.BIG_ENDIAN) {
-    throw("Err, DataStream.endianness should be DataStream.LITTLE_ENDIAN or DataStream.BIG_ENDIAN");
-  }
-  test('other', assert => {
-  var buf = new ArrayBuffer(1064);
-  var ds = new DataStream(buf, 64);
-  expect(ds.byteLength+64).to.equal(buf.byteLength);
-  ds.endianness = DataStream.LITTLE_ENDIAN;
-  ds.writeUint16(1);
-  ds.seek(0);
-  var a = ds.readUint8Array(2);
-  expect(a[0]).to.equal(1);
-  expect(a[1]).to.equal(0);
-  ds.seek(0);
-  ds.endianness = DataStream.BIG_ENDIAN;
-  ds.writeUint16(1);
-  ds.seek(0);
-  var a = ds.readUint8Array(2);
-  expect(a[0]).to.equal(0);
-  expect(a[1]).to.equal(1);
-  ds.seek(0);
-  ds.endianness = DataStream.LITTLE_ENDIAN;
-  for (var i = 0; i < 1000 / 8; i++) {
-    ds.writeFloat64(0.125);
-  }
-  expect(ds.position+64 ).to.equal(buf.byteLength);
-  expect(ds.byteLength+64 ).to.equal(buf.byteLength);
-  expect(ds.buffer.byteLength ).to.equal(buf.byteLength);
-
-  ds.seek(0);
-  for (var i = 0; i < 1000 / 8; i++) {
-    expect(0.125 ).to.equal(ds.readFloat64());
-  }
-  expect(ds.position+64 ).to.equal(buf.byteLength);
-
-  assert.throws(function() {
-    ds.readFloat32();
-  });
-
-  ds.seek(0);
-  ds.endianness = DataStream.BIG_ENDIAN;
-  for (var i = 0; i < 1000 / 8; i++) {
-    expect(0.125).to.not.equal(ds.readFloat64());
-  }
-  ds.seek(0);
-  for (var i = 0; i < 999; i++) {
-    ds.writeFloat32(0.125);
-  }
-  // reading beyond extended buffer succeeds for performance reasons
-  ds.readFloat32();
-  expect(ds.position ).to.equal(4000);
-  expect(ds.byteLength ).to.equal(3996);
-  expect(ds.buffer.byteLength ).to.equal(3996+64);
-  ds.position = 3996;
-  // but fails after getting buffer due to _trimAlloc
-  assert.throws(function() {
-    ds.readFloat32();
-  });
-
-  ds.seek(0);
-  for (var i = 0; i < 999; i++) {
-    expect(0.125 ).to.equal(ds.readFloat32());
-  }
-  expect(ds.position+64 ).to.equal(ds.buffer.byteLength);
-
-  ds.writeFloat32(0.125);
-
-  ds.dynamicSize = false;
-  assert.throws(function() {
-    ds.writeFloat32(0.125);
-  });
-
-  expect(ds.position ).to.equal(4000);
-  expect(ds.byteLength ).to.equal(4000);
-  expect(ds.buffer.byteLength ).to.equal(ds.position+64);
-
-  // testType(ds, 'Int32', 4);
-  // testType(ds, 'Int16', 2);
-  // testType(ds, 'Int8', 1);
-  // testType(ds, 'Uint32', 4);
-  // testType(ds, 'Uint16', 2);
-  // testType(ds, 'Uint8', 1);
-  // testType(ds, 'Float32', 4);
-  // testType(ds, 'Float64', 8);
-
-  ds = new DataStream(buf, 7);
-
-  // testType(ds, 'Int32', 4);
-  // testType(ds, 'Int16', 2);
-  // testType(ds, 'Int8', 1);
-  // testType(ds, 'Uint32', 4);
-  // testType(ds, 'Uint16', 2);
-  // testType(ds, 'Uint8', 1);
-  // testType(ds, 'Float32', 4);
-  // testType(ds, 'Float64', 8);
-
-  var s = "Hello, 世界";
-  var dss = new DataStream();
-  dss.writeUCS2String(s);
-  dss.seek(0);
-  expect(s).to.equal(dss.readUCS2String(s.length));
-
-  var s = "Exif\\000\\000";
-  var dss = new DataStream();
-  dss.writeString(s);
-  dss.seek(0);
-  expect(s).to.equal(dss.readString(s.length));
-
-  var dss = new DataStream();
-  var s = "Hello, World!";
-  dss.writeCString(s);
-  expect(dss.byteLength).to.equal(s.length + 1);
-  dss.seek(0);
-  expect(s).to.equal(dss.readCString());
-  var dp = dss.position;
-  dss.writeCString(s,s.length); // no zero terminate
-  dss.seek(dp);
-  expect(s).to.equal(dss.readCString());
-  dss.writeCString(s,s.length); // no zero terminate
-  dss.seek(dp);
-  expect(s).to.equal(dss.readCString(s.length));
-  dss.buffer;
-  expect(s).to.equal(dss.readCString());
-
-  var dss = new DataStream();
-  var s = "Hello, 世界";
-  dss.writeString(s, 'UTF-8');
-  var bl = dss.byteLength;
-  dss.seek(0);
-  expect(s, dss.readString(dss.byteLength).to.equal('UTF-8'));
-  // ugh, byte-counted UTF-8 strings :(
-
-  var dss = new DataStream();
-  var s = "Hello, me";
-  dss.writeString(s, 'UTF-8');
-  expect(bl).to.not.equal(dss.byteLength);
-  dss.seek(0);
-  expect(s, dss.readString(dss.byteLength).to.equal('UTF-8'));
-});
-*/ 
 //# sourceMappingURL=DataStream.test.js.map

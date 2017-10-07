@@ -5,8 +5,10 @@ import 'mocha';
 const sameMembers = (typedArr: TypedArray, arr: any[], msg?: string) =>
     assert.sameMembers(Array.from(typedArr), arr, msg);
 
-/*
-  var testType = (ds, t, elen) => test('Type:' + t, assert => {
+const TypedArrays = {Int8Array, Uint8Array, Uint8ClampedArray, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, Float64Array};
+
+describe('DataStream', () => {
+  var testType = (ds, t, elen) => {
     var i = 0;
     var boff = ds.byteOffset;
     var blen = ds.byteLength;
@@ -16,37 +18,37 @@ const sameMembers = (typedArr: TypedArray, arr: any[], msg?: string) =>
     for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
       ds["write"+t](125);
     }
-    expect(ds.position ).to.equal(elen*i);
-    expect(ds.byteLength ).to.equal(blen);
-    expect(ds.buffer.byteLength ).to.equal(ds.byteLength+boff);
+    assert.equal(ds.position , elen*i);
+    assert.equal(ds.byteLength , blen);
+    assert.equal(ds.buffer.byteLength , ds.byteLength+boff);
     ds.seek(0);
     for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
-      expect(ds["read"+t]()).to.equal(125);
+      assert.equal(ds["read"+t](), 125);
     }
-    expect(ds.position ).to.equal(elen*i);
-    expect(ds.byteLength ).to.equal(blen);
-    expect(ds.buffer.byteLength ).to.equal(ds.byteLength+boff);
+    assert.equal(ds.position , elen*i);
+    assert.equal(ds.byteLength , blen);
+    assert.equal(ds.buffer.byteLength , ds.byteLength+boff);
     ds.endianness = DataStream.BIG_ENDIAN;
     ds.seek(0);
     if (elen > 1) {
       for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
-	    expect(ds["read"+t]()).to.not.equal(125);
+	    assert.notEqual(ds["read"+t](), 125);
       }
     }
     ds.seek(0);
     for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
       ds["write"+t](125);
     }
-    expect(ds.position ).to.equal(elen*i);
-    expect(ds.byteLength ).to.equal(blen);
-    expect(ds.buffer.byteLength ).to.equal(ds.byteLength+boff);
+    assert.equal(ds.position , elen*i);
+    assert.equal(ds.byteLength , blen);
+    assert.equal(ds.buffer.byteLength , ds.byteLength+boff);
     ds.seek(0);
     for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
-      expect(ds["read"+t]()).to.equal(125);
+      assert.equal(ds["read"+t](), 125);
     }
-    expect(ds.position ).to.equal(elen*i);
-    expect(ds.byteLength ).to.equal(blen);
-    expect(ds.buffer.byteLength ).to.equal(ds.byteLength+boff);
+    assert.equal(ds.position , elen*i);
+    assert.equal(ds.byteLength , blen);
+    assert.equal(ds.buffer.byteLength , ds.byteLength+boff);
     assert.throws(function() {
       ds["read"+t]();
     });
@@ -55,26 +57,26 @@ const sameMembers = (typedArr: TypedArray, arr: any[], msg?: string) =>
       ds["write"+t](125);
     });
     testTypeArray(ds, t, elen);
-  });
+  };
 
-  var testSubArray = (typedArrayConstructor, t, arr) => test('SubArray:' + t, assert => {
+  var testSubArray = (typedArrayConstructor, t, arr) => {
       var typedArr = new typedArrayConstructor(arr);
       var ds = new DataStream();
       ds["write" + t + "Array"](typedArr.subarray(1));
       ds.seek(0);
       var outSubArray = ds["read" + t + "Array"](arr.length - 1);
       expect(typedArr.subarray(1)).to.deep.equal(outSubArray);
-  });
+  };
 
-  var testDS = (i, ds, boff, blen, t, elen, arr) => test('DS:' + t, assert => {
+  var testDS = (i, ds, boff, blen, t, elen, arr) => {
     ds.dynamicSize = true;
     ds.endianness = DataStream.LITTLE_ENDIAN;
 
     ds.seek(0);
     ds["write"+t+"Array"](arr);
-    expect(ds.position ).to.equal(elen*i);
-    expect(ds.byteLength ).to.equal(blen);
-    expect(ds.buffer.byteLength ).to.equal(ds.byteLength+boff);
+    assert.equal(ds.position , elen*i);
+    assert.equal(ds.byteLength , blen);
+    assert.equal(ds.buffer.byteLength , ds.byteLength+boff);
     ds.seek(0);
     var rarr = ds["read"+t+"Array"](arr.length);
     testSubArray(rarr.constructor, t, arr);
@@ -84,58 +86,59 @@ const sameMembers = (typedArr: TypedArray, arr: any[], msg?: string) =>
       rarr2.push(ds["read"+t]());
     }
     for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
-      expect(rarr[i]).to.equal(arr[i]);
-      expect(rarr[i]).to.equal(rarr2[i]);
+      assert.equal(rarr[i], arr[i]);
+      assert.equal(rarr[i], rarr2[i]);
     }
-    expect(ds.position ).to.equal(elen*i);
-    expect(ds.byteLength ).to.equal(blen);
-    expect(ds.buffer.byteLength ).to.equal(ds.byteLength+boff);
+    assert.equal(ds.position , elen*i);
+    assert.equal(ds.byteLength , blen);
+    assert.equal(ds.buffer.byteLength , ds.byteLength+boff);
 
     ds.seek(0);
-    for (var i=0; i<arr.length; i++) {
-      ds["write"+t](arr[i]);
+    for (let a of arr) {
+      ds["write"+t](a);
     }
-    expect(ds.position ).to.equal(elen*i);
-    expect(ds.byteLength ).to.equal(blen);
-    expect(ds.buffer.byteLength ).to.equal(ds.byteLength+boff);
+    assert.equal(ds.position , elen*i);
+    assert.equal(ds.byteLength , blen);
+    assert.equal(ds.buffer.byteLength , ds.byteLength+boff);
     ds.seek(0);
     var rarr = ds["read"+t+"Array"](arr.length);
     for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
-      expect(rarr[i]).to.equal(arr[i]);
+      assert.equal(rarr[i], arr[i]);
     }
-    expect(ds.position ).to.equal(elen*i);
-    expect(ds.byteLength ).to.equal(blen);
-    expect(ds.buffer.byteLength ).to.equal(ds.byteLength+boff);
+    assert.equal(ds.position , elen*i);
+    assert.equal(ds.byteLength , blen);
+    assert.equal(ds.buffer.byteLength , ds.byteLength+boff);
 
     // Map tests
-    if ((ds.byteOffset & rarr.BYTES_PER_ELEMENT) === 0) {
+    console.log(t, arr.length, ds.byteOffset % rarr.BYTES_PER_ELEMENT === 0);
+    if (ds.byteOffset % rarr.BYTES_PER_ELEMENT === 0) {
 
 
     ds.seek(0);
     var rarr = ds["map"+t+"Array"](arr.length);
     ds.seek(0);
     for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
-      expect(rarr[i]).to.equal(arr[i]);
+      assert.equal(rarr[i], arr[i]);
       rarr[i] = 127;
     }
     ds.seek(0);
     var warr = ds["read"+t+"Array"](arr.length);
     for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
-      expect(warr[i]).to.equal(127);
+      assert.equal(warr[i], 127);
     }
     ds.endianness = DataStream.BIG_ENDIAN;
     ds.seek(0);
     var rarr = ds["map"+t+"Array"](arr.length);
     ds.seek(0);
     for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
-      expect(rarr[i]).to.not.equal(arr[i]);
+      assert.notEqual(rarr[i], arr[i]);
       rarr[i] = 127;
     }
     ds.seek(0);
     if (elen > 1) {
     var warr = ds["read"+t+"Array"](arr.length);
       for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
-        expect(warr[i]).to.not.equal(127);
+        assert.notEqual(warr[i], 127);
       }
     }
     ds.seek(0);
@@ -143,38 +146,38 @@ const sameMembers = (typedArr: TypedArray, arr: any[], msg?: string) =>
     ds.seek(0);
     var warr = ds["read"+t+"Array"](arr.length);
     for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
-      expect(warr[i]).to.equal(127);
+      assert.equal(warr[i], 127);
     }
-    expect(ds.position ).to.equal(elen*i);
-    expect(ds.byteLength ).to.equal(blen);
-    expect(ds.buffer.byteLength ).to.equal(ds.byteLength+boff);
+    assert.equal(ds.position , elen*i);
+    assert.equal(ds.byteLength , blen);
+    assert.equal(ds.buffer.byteLength , ds.byteLength+boff);
     ds.endianness = DataStream.BIG_ENDIAN;
     ds.seek(0);
     var rarr = ds["read"+t+"Array"](arr.length);
     if (elen > 1) {
       for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
-        expect(rarr[i]).to.not.equal(arr[i]);
+        assert.notEqual(rarr[i], arr[i]);
       }
     }
     }
 
     ds.seek(0);
     ds["write"+t+"Array"](arr);
-    expect(ds.position ).to.equal(elen*i);
-    expect(ds.byteLength ).to.equal(blen);
-    expect(ds.buffer.byteLength ).to.equal(ds.byteLength+boff);
+    assert.equal(ds.position , elen*i);
+    assert.equal(ds.byteLength , blen);
+    assert.equal(ds.buffer.byteLength , ds.byteLength+boff);
     ds.seek(0);
     var rarr = ds["read"+t+"Array"](arr.length);
     for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
-      expect(rarr[i]).to.equal(arr[i]);
+      assert.equal(rarr[i], arr[i]);
     }
     ds.seek(0);
     for (i=0; i<Math.floor(ds.byteLength/elen); i++) {
-      expect(ds["read"+t]()).to.equal(arr[i]);
+      assert.equal(ds["read"+t](), arr[i]);
     }
-    expect(ds.position ).to.equal(elen*i);
-    expect(ds.byteLength ).to.equal(blen);
-    expect(ds.buffer.byteLength ).to.equal(ds.byteLength+boff);
+    assert.equal(ds.position , elen*i);
+    assert.equal(ds.byteLength , blen);
+    assert.equal(ds.buffer.byteLength , ds.byteLength+boff);
     assert.throws(function() {
       ds["read"+t+"Array"](1);
     });
@@ -187,15 +190,15 @@ const sameMembers = (typedArr: TypedArray, arr: any[], msg?: string) =>
     ds2.seek(0);
     var rarr = ds2["read"+t+"Array"](arr.length);
     for (i=0; i<ds2.byteLength/elen; i++) {
-      expect(rarr[i]).to.equal(arr[i]);
+      assert.equal(rarr[i], arr[i]);
     }
     ds2.buffer;
     assert.throws(function() {
       ds2["read"+t+"Array"](1);
     });
-  });
+  };
 
-  var testTypeArray = (ds, t, elen)=> test('SubArray:' + t, assert => {
+  var testTypeArray = (ds, t, elen) => {
     var i = 0;
     var boff = ds.byteOffset;
     var blen = ds.byteLength;
@@ -204,74 +207,73 @@ const sameMembers = (typedArr: TypedArray, arr: any[], msg?: string) =>
       arr.push((125 + i) % 127);
     }
     testDS(i, ds, boff, blen, t, elen, arr);
-    var arr = new this[t+"Array"](ds.byteLength/elen);
+    var arr = new TypedArrays[t+"Array"](ds.byteLength/elen);
     for (i=0; i<arr.length; i++) {
       arr[i] = (125 + i) % 127;
     }
     testDS(i, ds, boff, blen, t, elen, arr);
-  });
-*/
-describe('DataStream', () => {
+  };
+
   it('constructor', () => {
     var buf = new ArrayBuffer(100);
     var ds = new DataStream(buf);
-    expect(ds.byteLength).to.equal(buf.byteLength);
-    expect(ds.endianness).to.equal(DataStream.LITTLE_ENDIAN);
+    assert.equal(ds.byteLength, buf.byteLength);
+    assert.equal(ds.endianness, DataStream.LITTLE_ENDIAN);
     for (var i=0; i<100; i++) {
       ds = new DataStream(buf, i);
       ds = new DataStream(buf, i, DataStream.BIG_ENDIAN);
       ds = new DataStream(buf, i, DataStream.LITTLE_ENDIAN);
-      expect(ds.byteLength).to.equal(buf.byteLength-i);
-      expect(ds.byteOffset).to.equal(i);
+      assert.equal(ds.byteLength, buf.byteLength-i);
+      assert.equal(ds.byteOffset, i);
     }
     ds = new DataStream(buf, 2, DataStream.BIG_ENDIAN);
-    expect(ds.endianness).to.equal(DataStream.BIG_ENDIAN);
+    assert.equal(ds.endianness, DataStream.BIG_ENDIAN);
     ds = new DataStream(buf, null, DataStream.BIG_ENDIAN);
-    expect(ds.endianness).to.equal(DataStream.BIG_ENDIAN);
-    expect(ds.byteLength).to.equal(buf.byteLength);
+    assert.equal(ds.endianness, DataStream.BIG_ENDIAN);
+    assert.equal(ds.byteLength, buf.byteLength);
     ds = new DataStream(buf, null, DataStream.LITTLE_ENDIAN);
-    expect(ds.endianness).to.equal(DataStream.LITTLE_ENDIAN);
-    expect(ds.byteLength).to.equal(buf.byteLength);
+    assert.equal(ds.endianness, DataStream.LITTLE_ENDIAN);
+    assert.equal(ds.byteLength, buf.byteLength);
     var dv: any = new DataView(buf);
     ds = new DataStream(dv, 0, DataStream.BIG_ENDIAN);
-    expect(ds.endianness).to.equal(DataStream.BIG_ENDIAN);
-    expect(ds.byteLength).to.equal(buf.byteLength);
-    expect(ds.byteOffset).to.equal(dv.byteOffset);
+    assert.equal(ds.endianness, DataStream.BIG_ENDIAN);
+    assert.equal(ds.byteLength, buf.byteLength);
+    assert.equal(ds.byteOffset, dv.byteOffset);
     for (var i=0; i<100; i++) {
       dv = new DataView(buf, i);
       ds = new DataStream(dv);
-      expect(ds.byteLength).to.equal(buf.byteLength-i);
-      expect(ds.byteOffset).to.equal(dv.byteOffset);
+      assert.equal(ds.byteLength, buf.byteLength-i);
+      assert.equal(ds.byteOffset, dv.byteOffset);
     }
     for (var i=0; i<50; i++) {
       dv = new DataView(buf, 50);
       ds = new DataStream(dv, i);
-      expect(ds.byteLength).to.equal(buf.byteLength-i-dv.byteOffset);
-      expect(ds.byteOffset).to.equal(dv.byteOffset+i);
+      assert.equal(ds.byteLength, buf.byteLength-i-dv.byteOffset);
+      assert.equal(ds.byteOffset, dv.byteOffset+i);
     }
     for (var i=0; i<100; i++) {
       dv = new Uint8Array(buf, i);
       ds = new DataStream(dv);
-      expect(ds.byteLength).to.equal(buf.byteLength-i);
-      expect(ds.byteOffset).to.equal(dv.byteOffset);
+      assert.equal(ds.byteLength, buf.byteLength-i);
+      assert.equal(ds.byteOffset, dv.byteOffset);
     }
     for (var i=0; i<50; i++) {
       dv = new Uint8Array(buf, 50);
       ds = new DataStream(dv, i);
-      expect(ds.byteLength).to.equal(buf.byteLength-i-dv.byteOffset);
-      expect(ds.byteOffset).to.equal(dv.byteOffset+i);
+      assert.equal(ds.byteLength, buf.byteLength-i-dv.byteOffset);
+      assert.equal(ds.byteOffset, dv.byteOffset+i);
     }
     for (var i=0; i<25; i++) {
       dv = new Float32Array(buf, i*4);
       ds = new DataStream(dv);
-      expect(ds.byteLength).to.equal(buf.byteLength-i*4);
-      expect(ds.byteOffset).to.equal(dv.byteOffset);
+      assert.equal(ds.byteLength, buf.byteLength-i*4);
+      assert.equal(ds.byteOffset, dv.byteOffset);
     }
     for (var i=0; i<12; i++) {
       dv = new Float32Array(buf, 12);
       ds = new DataStream(dv, i);
-      expect(ds.byteLength).to.equal(buf.byteLength-i-dv.byteOffset);
-      expect(ds.byteOffset).to.equal(dv.byteOffset+i);
+      assert.equal(ds.byteLength, buf.byteLength-i-dv.byteOffset);
+      assert.equal(ds.byteOffset, dv.byteOffset+i);
     }
   });
 
@@ -309,8 +311,8 @@ describe('DataStream', () => {
     var d2 = obj2.data;
     delete obj.data;
     delete obj2.data;
-    expect(255).to.equal(obj.endNote);
-    expect(255).to.equal(obj2.endNote);
+    assert.equal(255, obj.endNote);
+    assert.equal(255, obj2.endNote);
     expect(obj).to.deep.equal(obj2);
     expect(d1).to.deep.equal(d2);
     var p = ds.position;
@@ -322,7 +324,7 @@ describe('DataStream', () => {
     var d3 = obj3.data;
     delete obj3.data;
     ds.seek(p);
-    expect(255).to.equal(obj3.endNote);
+    assert.equal(255, obj3.endNote);
     sameMembers(ds.readUint8Array(u.length), u);
     expect(obj).to.deep.equal(obj3);
     expect(d1).to.deep.equal(d3);
@@ -339,22 +341,22 @@ describe('DataStream', () => {
     ds2.seek(0);
     ds2.endianness = DataStream.LITTLE_ENDIAN;
     var o2: any = ds2.readStruct(def2);
-    expect(o2.one).to.equal(1);
-    expect(o2.four).to.equal(1);
-    expect(o2.two).to.not.equal(o2.three);
-    expect(o2.one).to.equal(o2.four);
-    expect(o2.one).to.equal(o2.three);
-    expect(o2.one/*LE*/).to.not.equal(o2.two/*BE*/);
-    expect(o2.one/*LE*/).to.equal(o2.three/*LE*/);
+    assert.equal(o2.one, 1);
+    assert.equal(o2.four, 1);
+    assert.notEqual(o2.two, o2.three);
+    assert.equal(o2.one, o2.four);
+    assert.equal(o2.one, o2.three);
+    assert.notEqual(o2.one/*LE*/, o2.two/*BE*/);
+    assert.equal(o2.one/*LE*/, o2.three/*LE*/);
     ds2.seek(0);
     ds2.endianness = DataStream.BIG_ENDIAN;
     o2 = ds2.readStruct(def2);
-    expect(o2.one).to.not.equal(1);
-    expect(o2.four).to.not.equal(1);
-    expect(o2.two).to.not.equal(o2.three);
-    expect(o2.one).to.equal(o2.four);
-    expect(o2.one/*BE*/).to.equal(o2.two/*BE*/);
-    expect(o2.one/*BE*/).to.not.equal(o2.three/*LE*/);
+    assert.notEqual(o2.one, 1);
+    assert.notEqual(o2.four, 1);
+    assert.notEqual(o2.two, o2.three);
+    assert.equal(o2.one, o2.four);
+    assert.equal(o2.one/*BE*/, o2.two/*BE*/);
+    assert.notEqual(o2.one/*BE*/, o2.three/*LE*/);
 
     var def3 = [
       'length', 'uint16be',
@@ -366,8 +368,8 @@ describe('DataStream', () => {
     ds3.writeUint8Array(u3);
     ds3.seek(0);
     var o3: any = ds3.readStruct(def3);
-    expect(o3.length).to.equal(8);
-    expect(o3.endNote).to.equal(255);
+    assert.equal(o3.length, 8);
+    assert.equal(o3.endNote, 255);
     sameMembers(o3.data, [1,2,3,4,5,6]);
 
     var def4 = [
@@ -393,8 +395,8 @@ describe('DataStream', () => {
     var u4 = [0,8,1,2,3,4,5,6,255];
     var ds4 = new DataStream(new Uint8Array(u4));
     var o4: any = ds4.readStruct(def4);
-    expect(o4.length).to.equal(8);
-    expect(o4.endNote).to.equal(255);
+    assert.equal(o4.length, 8);
+    assert.equal(o4.endNote, 255);
     expect(o4.data.odd).to.deep.equal([1,3,5]);
     expect(o4.data.even).to.deep.equal([2,4,6]);
     var pos = ds4.position;
@@ -425,11 +427,11 @@ describe('DataStream', () => {
     ds5.writeUint8Array(u5);
     ds5.seek(0);
     var o5: any = ds5.readStruct(def5);
-	expect(o5.len).to.equal(o5.greet.length);
-    expect('Hello').to.equal(o5.greet);
-    expect(', ').to.equal(o5.pad);
-	expect(o5.len2).to.equal(o5.greet2.length);
-    expect('World!').to.equal(o5.greet2);
+	assert.equal(o5.len, o5.greet.length);
+    assert.equal('Hello', o5.greet);
+    assert.equal(', ', o5.pad);
+	assert.equal(o5.len2, o5.greet2.length);
+    assert.equal('World!', o5.greet2);
     sameMembers(o5.tail, [0,0,0,0,0,0,0,255]);
 
     var def6 = [
@@ -446,7 +448,7 @@ describe('DataStream', () => {
     ds6.writeUint8Array(u6);
     ds6.seek(0);
     var o6: any = ds6.readStruct(def6);
-    expect(greet).to.equal(o6.greet);
+    assert.equal(greet, o6.greet);
 
     const ds6b = new DataStream();
     ds6b.writeStruct(def6, o6);
@@ -466,43 +468,43 @@ describe('DataStream', () => {
     sameMembers(new Uint8Array(ds6b.buffer), u6);
     sameMembers(new Uint8Array(ds6c.buffer), u6);
   });
-});
 
-/*
-  if (DataStream.endianness != DataStream.LITTLE_ENDIAN && DataStream.endianness != DataStream.BIG_ENDIAN) {
-    throw("Err, DataStream.endianness should be DataStream.LITTLE_ENDIAN or DataStream.BIG_ENDIAN");
-  }
-  test('other', assert => {
+  it('endianness', () =>{
+    assert(DataStream.endianness === DataStream.LITTLE_ENDIAN || DataStream.endianness === DataStream.BIG_ENDIAN,
+      "Err, DataStream.endianness should be DataStream.LITTLE_ENDIAN or DataStream.BIG_ENDIAN");
+  });
+
+it('other', () => {
   var buf = new ArrayBuffer(1064);
   var ds = new DataStream(buf, 64);
-  expect(ds.byteLength+64).to.equal(buf.byteLength);
+  assert.equal(ds.byteLength+64, buf.byteLength);
   ds.endianness = DataStream.LITTLE_ENDIAN;
   ds.writeUint16(1);
   ds.seek(0);
   var a = ds.readUint8Array(2);
-  expect(a[0]).to.equal(1);
-  expect(a[1]).to.equal(0);
+  assert.equal(a[0], 1);
+  assert.equal(a[1], 0);
   ds.seek(0);
   ds.endianness = DataStream.BIG_ENDIAN;
   ds.writeUint16(1);
   ds.seek(0);
   var a = ds.readUint8Array(2);
-  expect(a[0]).to.equal(0);
-  expect(a[1]).to.equal(1);
+  assert.equal(a[0], 0);
+  assert.equal(a[1], 1);
   ds.seek(0);
   ds.endianness = DataStream.LITTLE_ENDIAN;
   for (var i = 0; i < 1000 / 8; i++) {
     ds.writeFloat64(0.125);
   }
-  expect(ds.position+64 ).to.equal(buf.byteLength);
-  expect(ds.byteLength+64 ).to.equal(buf.byteLength);
-  expect(ds.buffer.byteLength ).to.equal(buf.byteLength);
+  assert.equal(ds.position+64 , buf.byteLength);
+  assert.equal(ds.byteLength+64 , buf.byteLength);
+  assert.equal(ds.buffer.byteLength , buf.byteLength);
 
   ds.seek(0);
   for (var i = 0; i < 1000 / 8; i++) {
-    expect(0.125 ).to.equal(ds.readFloat64());
+    assert.equal(0.125 , ds.readFloat64());
   }
-  expect(ds.position+64 ).to.equal(buf.byteLength);
+  assert.equal(ds.position+64 , buf.byteLength);
 
   assert.throws(function() {
     ds.readFloat32();
@@ -511,7 +513,7 @@ describe('DataStream', () => {
   ds.seek(0);
   ds.endianness = DataStream.BIG_ENDIAN;
   for (var i = 0; i < 1000 / 8; i++) {
-    expect(0.125).to.not.equal(ds.readFloat64());
+    assert.notEqual(0.125, ds.readFloat64());
   }
   ds.seek(0);
   for (var i = 0; i < 999; i++) {
@@ -519,9 +521,9 @@ describe('DataStream', () => {
   }
   // reading beyond extended buffer succeeds for performance reasons
   ds.readFloat32();
-  expect(ds.position ).to.equal(4000);
-  expect(ds.byteLength ).to.equal(3996);
-  expect(ds.buffer.byteLength ).to.equal(3996+64);
+  assert.equal(ds.position , 4000);
+  assert.equal(ds.byteLength , 3996);
+  assert.equal(ds.buffer.byteLength , 3996+64);
   ds.position = 3996;
   // but fails after getting buffer due to _trimAlloc
   assert.throws(function() {
@@ -530,9 +532,9 @@ describe('DataStream', () => {
 
   ds.seek(0);
   for (var i = 0; i < 999; i++) {
-    expect(0.125 ).to.equal(ds.readFloat32());
+    assert.equal(0.125 , ds.readFloat32());
   }
-  expect(ds.position+64 ).to.equal(ds.buffer.byteLength);
+  assert.equal(ds.position+64 , ds.buffer.byteLength);
 
   ds.writeFloat32(0.125);
 
@@ -541,71 +543,72 @@ describe('DataStream', () => {
     ds.writeFloat32(0.125);
   });
 
-  expect(ds.position ).to.equal(4000);
-  expect(ds.byteLength ).to.equal(4000);
-  expect(ds.buffer.byteLength ).to.equal(ds.position+64);
+  assert.equal(ds.position , 4000);
+  assert.equal(ds.byteLength , 4000);
+  assert.equal(ds.buffer.byteLength , ds.position+64);
 
-  // testType(ds, 'Int32', 4);
-  // testType(ds, 'Int16', 2);
-  // testType(ds, 'Int8', 1);
-  // testType(ds, 'Uint32', 4);
-  // testType(ds, 'Uint16', 2);
-  // testType(ds, 'Uint8', 1);
-  // testType(ds, 'Float32', 4);
-  // testType(ds, 'Float64', 8);
+  testType(ds, 'Int32', 4);
+  testType(ds, 'Int16', 2);
+  testType(ds, 'Int8', 1);
+  testType(ds, 'Uint32', 4);
+  testType(ds, 'Uint16', 2);
+  testType(ds, 'Uint8', 1);
+  testType(ds, 'Float32', 4);
+  testType(ds, 'Float64', 8);
 
   ds = new DataStream(buf, 7);
 
-  // testType(ds, 'Int32', 4);
-  // testType(ds, 'Int16', 2);
-  // testType(ds, 'Int8', 1);
-  // testType(ds, 'Uint32', 4);
-  // testType(ds, 'Uint16', 2);
-  // testType(ds, 'Uint8', 1);
-  // testType(ds, 'Float32', 4);
-  // testType(ds, 'Float64', 8);
+  testType(ds, 'Int32', 4);
+  testType(ds, 'Int16', 2);
+  testType(ds, 'Int8', 1);
+  testType(ds, 'Uint32', 4);
+  testType(ds, 'Uint16', 2);
+  testType(ds, 'Uint8', 1);
+  testType(ds, 'Float32', 4);
+  testType(ds, 'Float64', 8);
 
   var s = "Hello, 世界";
   var dss = new DataStream();
   dss.writeUCS2String(s);
   dss.seek(0);
-  expect(s).to.equal(dss.readUCS2String(s.length));
+  assert.equal(s, dss.readUCS2String(s.length));
 
   var s = "Exif\\000\\000";
   var dss = new DataStream();
   dss.writeString(s);
   dss.seek(0);
-  expect(s).to.equal(dss.readString(s.length));
+  assert.equal(s, dss.readString(s.length));
 
   var dss = new DataStream();
   var s = "Hello, World!";
   dss.writeCString(s);
-  expect(dss.byteLength).to.equal(s.length + 1);
+  assert.equal(dss.byteLength, s.length + 1);
   dss.seek(0);
-  expect(s).to.equal(dss.readCString());
+  assert.equal(s, dss.readCString());
   var dp = dss.position;
   dss.writeCString(s,s.length); // no zero terminate
   dss.seek(dp);
-  expect(s).to.equal(dss.readCString());
+  assert.equal(s, dss.readCString());
   dss.writeCString(s,s.length); // no zero terminate
   dss.seek(dp);
-  expect(s).to.equal(dss.readCString(s.length));
+  assert.equal(s, dss.readCString(s.length));
   dss.buffer;
-  expect(s).to.equal(dss.readCString());
+  assert.equal(s, dss.readCString());
 
   var dss = new DataStream();
   var s = "Hello, 世界";
   dss.writeString(s, 'UTF-8');
   var bl = dss.byteLength;
   dss.seek(0);
-  expect(s, dss.readString(dss.byteLength).to.equal('UTF-8'));
+  assert.equal(s, dss.readString(dss.byteLength, 'UTF-8'));
   // ugh, byte-counted UTF-8 strings :(
 
   var dss = new DataStream();
   var s = "Hello, me";
   dss.writeString(s, 'UTF-8');
-  expect(bl).to.not.equal(dss.byteLength);
+  assert.notEqual(bl, dss.byteLength);
   dss.seek(0);
-  expect(s, dss.readString(dss.byteLength).to.equal('UTF-8'));
+  assert.equal(s, dss.readString(dss.byteLength, 'UTF-8'));
 });
-*/
+});
+
