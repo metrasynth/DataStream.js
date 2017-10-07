@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "umd",
+    "lib": ["es2015", "dom"],
+    "moduleResolution": "node",
+    "sourceMap": true
+  },
+  "include": [
+    "*.ts",
+    "test/*.ts"
+  ]
+}

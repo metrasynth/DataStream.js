@@ -1,0 +1,12 @@
+{
+  "name": "example",
+  "devDependencies": {
+    "ts-loader": "^2.3.7",
+    "typescript": "^2.5.3",
+    "webpack": "^3.6.0"
+  },
+  "dependencies": {
+    "@types/jpeg-js": "^0.3.0",
+    "jpeg-js": "^0.3.3"
+  }
+}

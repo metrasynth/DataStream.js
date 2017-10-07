@@ -1,21 +1,56 @@
 {
-  "name": "DataStream.js",
-  "version": "0.1.0",
+  "name": "datastream-js",
+  "version": "1.0.0",
   "description": "DataStream.js is a library for reading data from ArrayBuffers",
   "main": "DataStream.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/kig/DataStream.js.git"
+    "url": "git://github.com/ohze/DataStream.js.git"
   },
   "keywords": [
     "datastream",
     "arraybuffer"
   ],
   "author": "Ilmari Heikkinen <ilmari@fhtr.net> (http://fhtr.net)",
+  "contributors": [
+    "Bui Viet Thanh <thanhbv@sandinh.net> (https://sandinh.com))"
+  ],
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/kig/DataStream.js/issues"
+    "url": "https://github.com/ohze/DataStream.js/issues"
   },
-  "homepage": "https://github.com/kig/DataStream.js",
-  "readmeFilename": "README.md"
+  "homepage": "https://github.com/ohze/DataStream.js",
+  "readmeFilename": "README.md",
+  "dependencies": {
+    "text-encoding": "^0.6.4"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.0.4",
+    "@types/mocha": "^2.2.43",
+    "@types/text-encoding": "0.0.32",
+    "chai": "^4.1.2",
+    "mocha": "^4.0.1",
+    "nyc": "^11.2.1",
+    "prettier": "^1.7.4",
+    "publish-please": "^2.3.1",
+    "ts-node": "^3.3.0",
+    "tslint": "^5.7.0",
+    "tslint-config-prettier": "^1.5.0",
+    "tslint-config-standard": "^6.0.1",
+    "typescript": "^2.5.3"
+  },
+  "scripts": {
+    "fmt": "prettier --write \"{.,test,example}/*.ts\"",
+    "tsc": "tsc",
+    "lint": "tslint -p .",
+    "lint-fix": "tslint -c tslint.json --fix \"*.ts\" -t verbose",
+    "test": "nyc mocha -r ts-node/register --project tsconfig-test.json test/**test.ts",
+    "publish-please": "publish-please",
+    "prepare": "npm run fmt && tsc -d",
+    "prepublishOnly": "publish-please guard"
+  },
+  "prettier": {
+    "bracketSpacing": false,
+    "tabWidth": 4
+  }
 }

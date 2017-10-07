@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "umd",
+    "lib": ["es2015"],
+    "moduleResolution": "node",
+    "declaration": true,
+    "declarationDir": "./types",
+    "sourceMap": true
+  },
+  "include": ["*.ts"]
+}
