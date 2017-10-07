@@ -3,4 +3,6 @@ node_modules/
 /.nyc_output/
 *.js
 *.js.map
-!/example/jpg.js
+!webpack.config.js
+/test/*.d.ts
+/example/*.d.ts

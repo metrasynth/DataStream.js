@@ -1,11 +1,5 @@
-import DataStream, {TypedArray} from "../DataStream";
-
-declare class JpegImage {
-    width: number;
-    height: number;
-    parse(data: TypedArray): void;
-    copyToImageData(imageData: ImageData): void;
-}
+import DataStream from "../DataStream";
+import jpeg = require("jpeg-js");
 
 document.querySelector('input[type="file"]').addEventListener('change', function(e) {
   var reader = new FileReader();
@@ -255,13 +249,11 @@ document.querySelector('input[type="file"]').addEventListener('change', function
     if (obj) {
       pre.textContent = JSON.stringify(obj, null, 4);
       if (obj.start) {
-        var j = new JpegImage();
-        j.parse(new Uint8Array(this.result));
+        const j = jpeg.decode(this.result);
         var c = document.createElement('canvas');
         c.width = j.width; c.height = j.height;
         var ctx = c.getContext('2d');
-        var id = ctx.getImageData(0,0,j.width, j.height);
-        j.copyToImageData(id);
+        const id = new ImageData(new Uint8ClampedArray(j.data), j.width, j.height);
         ctx.putImageData(id, 0,0);
         c.style.display = 'block';
         pre.appendChild(c);
