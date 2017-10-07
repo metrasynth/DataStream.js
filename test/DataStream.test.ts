@@ -110,9 +110,9 @@ describe('DataStream', () => {
     assert.equal(ds.buffer.byteLength , ds.byteLength+boff);
 
     // Map tests
-    console.log(t, arr.length, ds.byteOffset % rarr.BYTES_PER_ELEMENT === 0);
-    if (ds.byteOffset % rarr.BYTES_PER_ELEMENT === 0) {
-
+    // console.log(t, arr.length, ds.byteOffset % rarr.BYTES_PER_ELEMENT === 0);
+    // if (ds.byteOffset % rarr.BYTES_PER_ELEMENT === 0) {
+    assert.equal(ds.byteOffset % rarr.BYTES_PER_ELEMENT, 0);
 
     ds.seek(0);
     var rarr = ds["map"+t+"Array"](arr.length);
@@ -159,7 +159,7 @@ describe('DataStream', () => {
         assert.notEqual(rarr[i], arr[i]);
       }
     }
-    }
+    // }
 
     ds.seek(0);
     ds["write"+t+"Array"](arr);
@@ -474,9 +474,10 @@ describe('DataStream', () => {
       "Err, DataStream.endianness should be DataStream.LITTLE_ENDIAN or DataStream.BIG_ENDIAN");
   });
 
-it('other', () => {
   var buf = new ArrayBuffer(1064);
-  var ds = new DataStream(buf, 64);
+  let ds: DataStream;
+it('common test', () => {
+  ds = new DataStream(buf, 64);
   assert.equal(ds.byteLength+64, buf.byteLength);
   ds.endianness = DataStream.LITTLE_ENDIAN;
   ds.writeUint16(1);
@@ -546,27 +547,29 @@ it('other', () => {
   assert.equal(ds.position , 4000);
   assert.equal(ds.byteLength , 4000);
   assert.equal(ds.buffer.byteLength , ds.position+64);
+});
 
-  testType(ds, 'Int32', 4);
-  testType(ds, 'Int16', 2);
-  testType(ds, 'Int8', 1);
-  testType(ds, 'Uint32', 4);
-  testType(ds, 'Uint16', 2);
-  testType(ds, 'Uint8', 1);
-  testType(ds, 'Float32', 4);
-  testType(ds, 'Float64', 8);
+it('testType Int32', () => testType(ds, 'Int32', 4));
+it('testType Int16', () => testType(ds, 'Int16', 2));
+it('testType Int8', () => testType(ds, 'Int8', 1));
+it('testType Uint32', () => testType(ds, 'Uint32', 4));
+it('testType Uint16', () => testType(ds, 'Uint16', 2));
+it('testType Uint8', () => testType(ds, 'Uint8', 1));
+it('testType Float32', () => testType(ds, 'Float32', 4));
+it('testType Float64', () => testType(ds, 'Float64', 8));
 
   ds = new DataStream(buf, 7);
 
-  testType(ds, 'Int32', 4);
-  testType(ds, 'Int16', 2);
-  testType(ds, 'Int8', 1);
-  testType(ds, 'Uint32', 4);
-  testType(ds, 'Uint16', 2);
-  testType(ds, 'Uint8', 1);
-  testType(ds, 'Float32', 4);
-  testType(ds, 'Float64', 8);
+it('testType Int32 - second run', () => testType(ds, 'Int32', 4));
+it('testType Int16 - second run', () => testType(ds, 'Int16', 2));
+it('testType Int8 - second run', () => testType(ds, 'Int8', 1));
+it('testType Uint32 - second run', () => testType(ds, 'Uint32', 4));
+it('testType Uint16 - second run', () => testType(ds, 'Uint16', 2));
+it('testType Uint8 - second run', () => testType(ds, 'Uint8', 1));
+it('testType Float32 - second run', () => testType(ds, 'Float32', 4));
+it('testType Float64 - second run', () => testType(ds, 'Float64', 8));
 
+it('other', () => {
   var s = "Hello, 世界";
   var dss = new DataStream();
   dss.writeUCS2String(s);
