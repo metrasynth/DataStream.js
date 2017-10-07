@@ -1,5 +1,6 @@
 node_modules/
 /.idea/
 /.nyc_output/
-/*.js*
-!/jpg.js
+*.js
+*.js.map
+!/example/jpg.js
