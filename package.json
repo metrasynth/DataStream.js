@@ -28,10 +28,17 @@
     "chai": "^4.1.2",
     "mocha": "^4.0.1",
     "nyc": "^11.2.1",
+    "prettier": "^1.7.4",
     "ts-node": "^3.3.0",
     "typescript": "^2.5.3"
   },
   "scripts": {
-    "test": "nyc mocha -r ts-node/register test/**test.ts"
+    "fmt": "prettier --write \"{.,test,example}/*.ts\"",
+    "tsc": "tsc",
+    "test": "nyc mocha -r ts-node/register --project tsconfig-test.json test/**test.ts"
+  },
+  "prettier": {
+    "bracketSpacing": false,
+    "tabWidth": 4
   }
 }

@@ -4,5 +4,5 @@ node_modules/
 *.js
 *.js.map
 !webpack.config.js
-/test/*.d.ts
-/example/*.d.ts
+*.d.ts
+!/types/*.d.ts

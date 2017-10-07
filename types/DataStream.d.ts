@@ -1,39 +1,23 @@
-export declare type TypedArray =
-    | Int8Array
-    | Uint8Array
-    | Uint8ClampedArray
-    | Int16Array
-    | Uint16Array
-    | Int32Array
-    | Uint32Array
-    | Float32Array
-    | Float64Array;
+export declare type TypedArray = Int8Array | Uint8Array | Uint8ClampedArray | Int16Array | Uint16Array | Int32Array | Uint32Array | Float32Array | Float64Array;
 export interface StructReadFn {
     (ds: DataStream, struct: object): any;
 }
 export interface LenFn {
     (struct: object, ds: DataStream, def: StructRead): any;
 }
-export declare type StructRead =
-    | string
-    | StructReadFn
-    | {
-          get: StructReadFn;
-      }
-    | ["[]", string, string | LenFn]
-    | StructReadArray;
-export interface StructReadArray extends Array<StructRead> {}
+export declare type StructRead = string | StructReadFn | {
+    get: StructReadFn;
+} | ["[]", string, string | LenFn] | StructReadArray;
+export interface StructReadArray extends Array<StructRead> {
+}
 export interface StructWriteFn {
     (ds: DataStream, field: string, struct: object): void;
 }
-export declare type StructWrite =
-    | string
-    | StructWriteFn
-    | {
-          set: StructWriteFn;
-      }
-    | StructWriteArray;
-export interface StructWriteArray extends Array<StructWrite> {}
+export declare type StructWrite = string | StructWriteFn | {
+    set: StructWriteFn;
+} | StructWriteArray;
+export interface StructWriteArray extends Array<StructWrite> {
+}
 /**
   DataStream reads scalars, arrays and structs of data from an ArrayBuffer.
   It's like a file-like DataView on steroids.
@@ -48,17 +32,11 @@ export default class DataStream {
     position: number;
     private _buffer;
     private _dataView;
-    constructor(
-        arrayBuffer?:
-            | ArrayBuffer
-            | {
-                  buffer: ArrayBuffer;
-                  byteOffset: number;
-                  byteLength: number;
-              },
-        byteOffset?: number,
-        endianness?: boolean
-    );
+    constructor(arrayBuffer?: ArrayBuffer | {
+        buffer: ArrayBuffer;
+        byteOffset: number;
+        byteLength: number;
+    }, byteOffset?: number, endianness?: boolean);
     /**
   Big-endian const to use as default endianness.
   @type {boolean}
@@ -478,13 +456,7 @@ export default class DataStream {
   @param {number} srcOffset Offset to the source ArrayBuffer.
   @param {number} byteLength Number of bytes to copy.
  */
-    static memcpy(
-        dst: ArrayBufferLike,
-        dstOffset: number,
-        src: ArrayBuffer,
-        srcOffset: number,
-        byteLength: number
-    ): void;
+    static memcpy(dst: ArrayBufferLike, dstOffset: number, src: ArrayBuffer, srcOffset: number, byteLength: number): void;
     /**
   Converts array to native endianness in-place.
 
@@ -601,11 +573,7 @@ export default class DataStream {
   @param {?boolean} endianness The endianness to use for the written string data.
   @param {?number} lengthOverride The number of characters to write.
  */
-    writeUCS2String(
-        str: string,
-        endianness?: boolean,
-        lengthOverride?: number
-    ): void;
+    writeUCS2String(str: string, endianness?: boolean, lengthOverride?: number): void;
     /**
   Read a string of desired length and encoding from the DataStream.
 
@@ -663,11 +631,7 @@ export default class DataStream {
  * @param needConvertStructDef if set (== true) then structDefinition will be convert using
  *        `DataStream.defWriteStruct` before writing.
  */
-    writeStruct(
-        structDefinition: StructWrite[] | StructRead[],
-        struct: object,
-        needConvertStructDef?: boolean
-    ): void;
+    writeStruct(structDefinition: StructWrite[] | StructRead[], struct: object, needConvertStructDef?: boolean): void;
     /**
  * Convert a struct definition using for `readStruct` to a struct definition that can be using for `writeStruct`
  * @param readStructDef ex ['len', 'uint8', 'greet', 'string,utf-8:some_len_var_name']
