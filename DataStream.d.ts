@@ -8,12 +8,8 @@ export declare type TypedArray =
     | Uint32Array
     | Float32Array
     | Float64Array;
-export interface StructReadFn {
-    (ds: DataStream, struct: object): any;
-}
-export interface LenFn {
-    (struct: object, ds: DataStream, def: StructRead): any;
-}
+export type StructReadFn = (ds: DataStream, struct: object) => any;
+export type LenFn = (struct: object, ds: DataStream, def: StructRead) => any;
 export declare type StructRead =
     | string
     | StructReadFn
@@ -23,9 +19,11 @@ export declare type StructRead =
     | ["[]", string, string | LenFn]
     | StructReadArray;
 export interface StructReadArray extends Array<StructRead> {}
-export interface StructWriteFn {
-    (ds: DataStream, field: string, struct: object): void;
-}
+export type StructWriteFn = (
+    ds: DataStream,
+    field: string,
+    struct: object
+) => void;
 export declare type StructWrite =
     | string
     | StructWriteFn

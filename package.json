@@ -30,11 +30,16 @@
     "nyc": "^11.2.1",
     "prettier": "^1.7.4",
     "ts-node": "^3.3.0",
+    "tslint": "^5.7.0",
+    "tslint-config-prettier": "^1.5.0",
+    "tslint-config-standard": "^6.0.1",
     "typescript": "^2.5.3"
   },
   "scripts": {
     "fmt": "prettier --write \"{.,test,example}/*.ts\"",
     "tsc": "tsc",
+    "lint": "tslint -p .",
+    "lint-fix": "tslint -c tslint.json --fix \"*.ts\" -t verbose",
     "test": "nyc mocha -r ts-node/register --project tsconfig-test.json test/**test.ts"
   },
   "prettier": {

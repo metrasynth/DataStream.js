@@ -11,41 +11,42 @@ export type TypedArray =
     | Float32Array
     | Float64Array;
 
-export interface StructReadFn {
-    (ds: DataStream, struct: object): any;
-}
+export type StructReadFn = (ds: DataStream, struct: object) => any;
 
-export interface LenFn {
-    (struct: object, ds: DataStream, def: StructRead): any;
-}
-//https://github.com/Microsoft/TypeScript/issues/3496#issuecomment-128553540
+export type LenFn = (struct: object, ds: DataStream, def: StructRead) => any;
+// https://github.com/Microsoft/TypeScript/issues/3496#issuecomment-128553540
 export type StructRead =
     | string
     | StructReadFn
     | {get: StructReadFn}
     | ["[]", string, string | LenFn]
     | StructReadArray;
+
+// tslint:disable-next-line no-empty-interface
 export interface StructReadArray extends Array<StructRead> {}
 
-export interface StructWriteFn {
-    (ds: DataStream, field: string, struct: object): void;
-}
+export type StructWriteFn = (
+    ds: DataStream,
+    field: string,
+    struct: object
+) => void;
 export type StructWrite =
     | string
     | StructWriteFn
     | {set: StructWriteFn}
     | StructWriteArray;
+
+// tslint:disable-next-line no-empty-interface
 export interface StructWriteArray extends Array<StructWrite> {}
-// type StructDef = StructRead | StructWrite;
 
 /**
-  DataStream reads scalars, arrays and structs of data from an ArrayBuffer.
-  It's like a file-like DataView on steroids.
-
-  @param {ArrayBuffer} arrayBuffer ArrayBuffer to read from.
-  @param {?Number} byteOffset Offset from arrayBuffer beginning for the DataStream.
-  @param {?Boolean} endianness DataStream.BIG_ENDIAN or DataStream.LITTLE_ENDIAN (the default).
-  */
+ * DataStream reads scalars, arrays and structs of data from an ArrayBuffer.
+ * It's like a file-like DataView on steroids.
+ *
+ * @param {ArrayBuffer} arrayBuffer ArrayBuffer to read from.
+ * @param {?Number} byteOffset Offset from arrayBuffer beginning for the DataStream.
+ * @param {?Boolean} endianness DataStream.BIG_ENDIAN or DataStream.LITTLE_ENDIAN (the default).
+ */
 export default class DataStream {
     private _byteOffset: number;
     position = 0;
@@ -62,7 +63,7 @@ export default class DataStream {
         this._byteOffset = byteOffset || 0;
         if (arrayBuffer instanceof ArrayBuffer) {
             this.buffer = arrayBuffer;
-        } else if (typeof arrayBuffer == "object") {
+        } else if (typeof arrayBuffer === "object") {
             this.dataView = arrayBuffer as any;
             if (byteOffset) {
                 this._byteOffset += byteOffset;
@@ -73,27 +74,28 @@ export default class DataStream {
     }
 
     /**
-  Big-endian const to use as default endianness.
-  @type {boolean}
-  */
+     * Big-endian const to use as default endianness.
+     * @type {boolean}
+     */
     static readonly BIG_ENDIAN = false;
 
     /**
-  Little-endian const to use as default endianness.
-  @type {boolean}
-  */
+     * Little-endian const to use as default endianness.
+     * @type {boolean}
+     */
     static readonly LITTLE_ENDIAN = true;
 
     /**
-  Whether to extend DataStream buffer when trying to write beyond its size.
-  If set, the buffer is reallocated to twice its current size until the
-  requested write fits the buffer.
-  @type {boolean}
-  */
+     * Whether to extend DataStream buffer when trying to write beyond its size.
+     * If set, the buffer is reallocated to twice its current size until the
+     * requested write fits the buffer.
+     * @type {boolean}
+     */
     private _dynamicSize = true;
     get dynamicSize(): boolean {
         return this._dynamicSize;
     }
+
     set dynamicSize(v: boolean) {
         if (!v) {
             this._trimAlloc();
@@ -102,30 +104,31 @@ export default class DataStream {
     }
 
     /**
-  Virtual byte length of the DataStream backing buffer.
-  Updated to be max of original buffer size and last written size.
-  If dynamicSize is false is set to buffer size.
-  @type {number}
-  */
+     * Virtual byte length of the DataStream backing buffer.
+     * Updated to be max of original buffer size and last written size.
+     * If dynamicSize is false is set to buffer size.
+     * @type {number}
+     */
     private _byteLength = 0;
 
     /**
-  Returns the byte length of the DataStream object.
-  @type {number}
-  */
+     * Returns the byte length of the DataStream object.
+     * @type {number}
+     */
     get byteLength(): number {
         return this._byteLength - this._byteOffset;
     }
 
     /**
-  Set/get the backing ArrayBuffer of the DataStream object.
-  The setter updates the DataView to point to the new buffer.
-  @type {Object}
-  */
+     * Set/get the backing ArrayBuffer of the DataStream object.
+     * The setter updates the DataView to point to the new buffer.
+     * @type {Object}
+     */
     get buffer(): ArrayBuffer {
         this._trimAlloc();
         return this._buffer;
     }
+
     set buffer(v: ArrayBuffer) {
         this._buffer = v;
         this._dataView = new DataView(this._buffer, this._byteOffset);
@@ -133,13 +136,14 @@ export default class DataStream {
     }
 
     /**
-  Set/get the byteOffset of the DataStream object.
-  The setter updates the DataView to point to the new byteOffset.
-  @type {number}
-  */
+     * Set/get the byteOffset of the DataStream object.
+     * The setter updates the DataView to point to the new byteOffset.
+     * @type {number}
+     */
     get byteOffset(): number {
         return this._byteOffset;
     }
+
     set byteOffset(v: number) {
         this._byteOffset = v;
         this._dataView = new DataView(this._buffer, this._byteOffset);
@@ -147,13 +151,14 @@ export default class DataStream {
     }
 
     /**
-  Set/get the backing DataView of the DataStream object.
-  The setter updates the buffer and byteOffset to point to the DataView values.
-  @type get: DataView, set: {buffer: ArrayBuffer, byteOffset: number, byteLength: number}
-  */
+     * Set/get the backing DataView of the DataStream object.
+     * The setter updates the buffer and byteOffset to point to the DataView values.
+     * @type get: DataView, set: {buffer: ArrayBuffer, byteOffset: number, byteLength: number}
+     */
     get dataView(): DataView {
         return this._dataView;
     }
+
     set dataView(v: DataView) {
         this._byteOffset = v.byteOffset;
         this._buffer = v.buffer;
@@ -162,10 +167,10 @@ export default class DataStream {
     }
 
     /**
-  Internal function to resize the DataStream buffer when required.
-  @param {number} extra Number of bytes to add to the buffer allocation.
-  @return {null}
-  */
+     * Internal function to resize the DataStream buffer when required.
+     * @param {number} extra Number of bytes to add to the buffer allocation.
+     * @return {null}
+     */
     private _realloc(extra: number) {
         if (!this._dynamicSize) {
             return;
@@ -193,15 +198,14 @@ export default class DataStream {
     }
 
     /**
-  Internal function to trim the DataStream buffer when required.
-  Used for stripping out the extra bytes from the backing buffer when
-  the virtual byteLength is smaller than the buffer byteLength (happens after
-  growing the buffer with writes and not filling the extra space completely).
-
-  @return {null}
-  */
+     * Internal function to trim the DataStream buffer when required.
+     * Used for stripping out the extra bytes from the backing buffer when
+     * the virtual byteLength is smaller than the buffer byteLength (happens after
+     * growing the buffer with writes and not filling the extra space completely).
+     * @return {null}
+     */
     private _trimAlloc(): void {
-        if (this._byteLength == this._buffer.byteLength) {
+        if (this._byteLength === this._buffer.byteLength) {
             return;
         }
         const buf = new ArrayBuffer(this._byteLength);
@@ -212,39 +216,37 @@ export default class DataStream {
     }
 
     /**
-  Sets the DataStream read/write position to given position.
-  Clamps between 0 and DataStream length.
-
-  @param {number} pos Position to seek to.
-  @return {null}
-  */
+     * Sets the DataStream read/write position to given position.
+     * Clamps between 0 and DataStream length.
+     * @param {number} pos Position to seek to.
+     * @return {null}
+     */
     seek(pos) {
         const npos = Math.max(0, Math.min(this.byteLength, pos));
         this.position = isNaN(npos) || !isFinite(npos) ? 0 : npos;
     }
 
     /**
-  Returns true if the DataStream seek pointer is at the end of buffer and
-  there's no more data to read.
-
-  @return {boolean} True if the seek pointer is at the end of the buffer.
-  */
+     * Returns true if the DataStream seek pointer is at the end of buffer and
+     * there's no more data to read.
+     * @return {boolean} True if the seek pointer is at the end of the buffer.
+     */
     isEof() {
         return this.position >= this.byteLength;
     }
 
     /**
-  Maps an Int32Array into the DataStream buffer, swizzling it to native
-  endianness in-place. The current offset from the start of the buffer needs to
-  be a multiple of element size, just like with typed array views.
-
-  Nice for quickly reading in data. Warning: potentially modifies the buffer
-  contents.
-
-  @param {number} length Number of elements to map.
-  @param {?boolean} e Endianness of the data to read.
-  @return {Object} Int32Array to the DataStream backing buffer.
-  */
+     * Maps an Int32Array into the DataStream buffer, swizzling it to native
+     * endianness in-place. The current offset from the start of the buffer needs to
+     * be a multiple of element size, just like with typed array views.
+     *
+     * Nice for quickly reading in data. Warning: potentially modifies the buffer
+     * contents.
+     *
+     * @param {number} length Number of elements to map.
+     * @param {?boolean} e Endianness of the data to read.
+     * @return {Object} Int32Array to the DataStream backing buffer.
+     */
     mapInt32Array(length: number, e?: boolean): Int32Array {
         this._realloc(length * 4);
         const arr = new Int32Array(
@@ -258,17 +260,17 @@ export default class DataStream {
     }
 
     /**
-  Maps an Int16Array into the DataStream buffer, swizzling it to native
-  endianness in-place. The current offset from the start of the buffer needs to
-  be a multiple of element size, just like with typed array views.
-
-  Nice for quickly reading in data. Warning: potentially modifies the buffer
-  contents.
-
-  @param {number} length Number of elements to map.
-  @param {?boolean} e Endianness of the data to read.
-  @return {Object} Int16Array to the DataStream backing buffer.
-  */
+     * Maps an Int16Array into the DataStream buffer, swizzling it to native
+     * endianness in-place. The current offset from the start of the buffer needs to
+     * be a multiple of element size, just like with typed array views.
+     *
+     * Nice for quickly reading in data. Warning: potentially modifies the buffer
+     * contents.
+     *
+     * @param {number} length Number of elements to map.
+     * @param {?boolean} e Endianness of the data to read.
+     * @return {Object} Int16Array to the DataStream backing buffer.
+     */
     mapInt16Array(length: number, e?: boolean): Int16Array {
         this._realloc(length * 2);
         const arr = new Int16Array(
@@ -282,37 +284,34 @@ export default class DataStream {
     }
 
     /**
-  Maps an Int8Array into the DataStream buffer.
-
-  Nice for quickly reading in data.
-
-  @param {number} length Number of elements to map.
-  @param {?boolean} e Endianness of the data to read.
-  @return {Object} Int8Array to the DataStream backing buffer.
-  */
+     * Maps an Int8Array into the DataStream buffer.
+     *
+     * Nice for quickly reading in data.
+     *
+     * @param {number} length Number of elements to map.
+     * @return {Object} Int8Array to the DataStream backing buffer.
+     */
     mapInt8Array(length: number): Int8Array {
-        this._realloc(length * 1);
+        this._realloc(length);
         const arr = new Int8Array(
             this._buffer,
             this.byteOffset + this.position,
             length
         );
-        this.position += length * 1;
+        this.position += length;
         return arr;
     }
 
     /**
-  Maps a Uint32Array into the DataStream buffer, swizzling it to native
-  endianness in-place. The current offset from the start of the buffer needs to
-  be a multiple of element size, just like with typed array views.
-
-  Nice for quickly reading in data. Warning: potentially modifies the buffer
-  contents.
-
-  @param {number} length Number of elements to map.
-  @param {?boolean} e Endianness of the data to read.
-  @return {Object} Uint32Array to the DataStream backing buffer.
-  */
+     * Maps a Uint32Array into the DataStream buffer, swizzling it to native
+     * endianness in-place. The current offset from the start of the buffer needs to
+     * be a multiple of element size, just like with typed array views.*
+     * Nice for quickly reading in data. Warning: potentially modifies the buffer
+     * contents.*
+     * @param {number} length Number of elements to map.
+     * @param {?boolean} e Endianness of the data to read.
+     * @return {Object} Uint32Array to the DataStream backing buffer.
+     */
     mapUint32Array(length: number, e?: boolean): Uint32Array {
         this._realloc(length * 4);
         const arr = new Uint32Array(
@@ -326,17 +325,17 @@ export default class DataStream {
     }
 
     /**
-  Maps a Uint16Array into the DataStream buffer, swizzling it to native
-  endianness in-place. The current offset from the start of the buffer needs to
-  be a multiple of element size, just like with typed array views.
-
-  Nice for quickly reading in data. Warning: potentially modifies the buffer
-  contents.
-
-  @param {number} length Number of elements to map.
-  @param {?boolean} e Endianness of the data to read.
-  @return {Object} Uint16Array to the DataStream backing buffer.
-  */
+     * Maps a Uint16Array into the DataStream buffer, swizzling it to native
+     * endianness in-place. The current offset from the start of the buffer needs to
+     * be a multiple of element size, just like with typed array views.
+     *
+     * Nice for quickly reading in data. Warning: potentially modifies the buffer
+     * contents.
+     *
+     * @param {number} length Number of elements to map.
+     * @param {?boolean} e Endianness of the data to read.
+     * @return {Object} Uint16Array to the DataStream backing buffer.
+     */
     mapUint16Array(length: number, e?: boolean): Uint16Array {
         this._realloc(length * 2);
         const arr = new Uint16Array(
@@ -350,37 +349,36 @@ export default class DataStream {
     }
 
     /**
-  Maps a Uint8Array into the DataStream buffer.
-
-  Nice for quickly reading in data.
-
-  @param {number} length Number of elements to map.
-  @param {?boolean} e Endianness of the data to read.
-  @return {Object} Uint8Array to the DataStream backing buffer.
-  */
+     * Maps a Uint8Array into the DataStream buffer.
+     *
+     * Nice for quickly reading in data.
+     *
+     * @param {number} length Number of elements to map.
+     * @return {Object} Uint8Array to the DataStream backing buffer.
+     */
     mapUint8Array(length: number): Uint8Array {
-        this._realloc(length * 1);
+        this._realloc(length);
         const arr = new Uint8Array(
             this._buffer,
             this.byteOffset + this.position,
             length
         );
-        this.position += length * 1;
+        this.position += length;
         return arr;
     }
 
     /**
-  Maps a Float64Array into the DataStream buffer, swizzling it to native
-  endianness in-place. The current offset from the start of the buffer needs to
-  be a multiple of element size, just like with typed array views.
-
-  Nice for quickly reading in data. Warning: potentially modifies the buffer
-  contents.
-
-  @param {number} length Number of elements to map.
-  @param {?boolean} e Endianness of the data to read.
-  @return {Object} Float64Array to the DataStream backing buffer.
-  */
+     * Maps a Float64Array into the DataStream buffer, swizzling it to native
+     * endianness in-place. The current offset from the start of the buffer needs to
+     * be a multiple of element size, just like with typed array views.
+     *
+     * Nice for quickly reading in data. Warning: potentially modifies the buffer
+     * contents.
+     *
+     * @param {number} length Number of elements to map.
+     * @param {?boolean} e Endianness of the data to read.
+     * @return {Object} Float64Array to the DataStream backing buffer.
+     */
     mapFloat64Array(length: number, e?: boolean): Float64Array {
         this._realloc(length * 8);
         const arr = new Float64Array(
@@ -394,17 +392,17 @@ export default class DataStream {
     }
 
     /**
-  Maps a Float32Array into the DataStream buffer, swizzling it to native
-  endianness in-place. The current offset from the start of the buffer needs to
-  be a multiple of element size, just like with typed array views.
-
-  Nice for quickly reading in data. Warning: potentially modifies the buffer
-  contents.
-
-  @param {number} length Number of elements to map.
-  @param {?boolean} e Endianness of the data to read.
-  @return {Object} Float32Array to the DataStream backing buffer.
-  */
+     * Maps a Float32Array into the DataStream buffer, swizzling it to native
+     * endianness in-place. The current offset from the start of the buffer needs to
+     * be a multiple of element size, just like with typed array views.
+     *
+     * Nice for quickly reading in data. Warning: potentially modifies the buffer
+     * contents.
+     *
+     * @param {number} length Number of elements to map.
+     * @param {?boolean} e Endianness of the data to read.
+     * @return {Object} Float32Array to the DataStream backing buffer.
+     */
     mapFloat32Array(length: number, e?: boolean): Float32Array {
         this._realloc(length * 4);
         const arr = new Float32Array(
@@ -418,12 +416,12 @@ export default class DataStream {
     }
 
     /**
-  Reads an Int32Array of desired length and endianness from the DataStream.
-
-  @param {number} length Number of elements to map.
-  @param {?boolean} e Endianness of the data to read.
-  @return {Object} The read Int32Array.
- */
+     * Reads an Int32Array of desired length and endianness from the DataStream.
+     *
+     * @param {number} length Number of elements to map.
+     * @param {?boolean} e Endianness of the data to read.
+     * @return {Object} The read Int32Array.
+     */
     readInt32Array(length: number, e?: boolean): Int32Array {
         length = length == null ? this.byteLength - this.position / 4 : length;
         const arr = new Int32Array(length);
@@ -440,12 +438,12 @@ export default class DataStream {
     }
 
     /**
-  Reads an Int16Array of desired length and endianness from the DataStream.
-
-  @param {number} length Number of elements to map.
-  @param {?boolean} e Endianness of the data to read.
-  @return {Object} The read Int16Array.
- */
+     * Reads an Int16Array of desired length and endianness from the DataStream.
+     *
+     * @param {number} length Number of elements to map.
+     * @param {?boolean} e Endianness of the data to read.
+     * @return {Object} The read Int16Array.
+     */
     readInt16Array(length: number, e?: boolean): Int16Array {
         length = length == null ? this.byteLength - this.position / 2 : length;
         const arr = new Int16Array(length);
@@ -462,12 +460,11 @@ export default class DataStream {
     }
 
     /**
-  Reads an Int8Array of desired length from the DataStream.
-
-  @param {number} length Number of elements to map.
-  @param {?boolean} e Endianness of the data to read.
-  @return {Object} The read Int8Array.
- */
+     * Reads an Int8Array of desired length from the DataStream.
+     *
+     * @param {number} length Number of elements to map.
+     * @return {Object} The read Int8Array.
+     */
     readInt8Array(length: number): Int8Array {
         length = length == null ? this.byteLength - this.position : length;
         const arr = new Int8Array(length);
@@ -483,12 +480,12 @@ export default class DataStream {
     }
 
     /**
-  Reads a Uint32Array of desired length and endianness from the DataStream.
-
-  @param {number} length Number of elements to map.
-  @param {?boolean} e Endianness of the data to read.
-  @return {Object} The read Uint32Array.
- */
+     * Reads a Uint32Array of desired length and endianness from the DataStream.
+     *
+     * @param {number} length Number of elements to map.
+     * @param {?boolean} e Endianness of the data to read.
+     * @return {Object} The read Uint32Array.
+     */
     readUint32Array(length: number, e?: boolean): Uint32Array {
         length = length == null ? this.byteLength - this.position / 4 : length;
         const arr = new Uint32Array(length);
@@ -505,12 +502,12 @@ export default class DataStream {
     }
 
     /**
-  Reads a Uint16Array of desired length and endianness from the DataStream.
-
-  @param {number} length Number of elements to map.
-  @param {?boolean} e Endianness of the data to read.
-  @return {Object} The read Uint16Array.
- */
+     * Reads a Uint16Array of desired length and endianness from the DataStream.
+     *
+     * @param {number} length Number of elements to map.
+     * @param {?boolean} e Endianness of the data to read.
+     * @return {Object} The read Uint16Array.
+     */
     readUint16Array(length: number, e?: boolean): Uint16Array {
         length = length == null ? this.byteLength - this.position / 2 : length;
         const arr = new Uint16Array(length);
@@ -527,12 +524,11 @@ export default class DataStream {
     }
 
     /**
-  Reads a Uint8Array of desired length from the DataStream.
-
-  @param {number} length Number of elements to map.
-  @param {?boolean} e Endianness of the data to read.
-  @return {Object} The read Uint8Array.
- */
+     * Reads a Uint8Array of desired length from the DataStream.
+     *
+     * @param {number} length Number of elements to map.
+     * @return {Object} The read Uint8Array.
+     */
     readUint8Array(length: number): Uint8Array {
         length = length == null ? this.byteLength - this.position : length;
         const arr = new Uint8Array(length);
@@ -548,12 +544,12 @@ export default class DataStream {
     }
 
     /**
-  Reads a Float64Array of desired length and endianness from the DataStream.
-
-  @param {number} length Number of elements to map.
-  @param {?boolean} e Endianness of the data to read.
-  @return {Object} The read Float64Array.
- */
+     * Reads a Float64Array of desired length and endianness from the DataStream.
+     *
+     * @param {number} length Number of elements to map.
+     * @param {?boolean} e Endianness of the data to read.
+     * @return {Object} The read Float64Array.
+     */
     readFloat64Array(length: number, e?: boolean): Float64Array {
         length = length == null ? this.byteLength - this.position / 8 : length;
         const arr = new Float64Array(length);
@@ -570,12 +566,12 @@ export default class DataStream {
     }
 
     /**
-  Reads a Float32Array of desired length and endianness from the DataStream.
-
-  @param {number} length Number of elements to map.
-  @param {?boolean} e Endianness of the data to read.
-  @return {Object} The read Float32Array.
- */
+     * Reads a Float32Array of desired length and endianness from the DataStream.
+     *
+     * @param {number} length Number of elements to map.
+     * @param {?boolean} e Endianness of the data to read.
+     * @return {Object} The read Float32Array.
+     */
     readFloat32Array(length: number, e?: boolean): Float32Array {
         length = length == null ? this.byteLength - this.position / 4 : length;
         const arr = new Float32Array(length);
@@ -592,16 +588,16 @@ export default class DataStream {
     }
 
     /**
-  Writes an Int32Array of specified endianness to the DataStream.
-
-  @param {Object} arr The array to write.
-  @param {?boolean} e Endianness of the data to write.
- */
+     * Writes an Int32Array of specified endianness to the DataStream.
+     *
+     * @param {Object} arr The array to write.
+     * @param {?boolean} e Endianness of the data to write.
+     */
     writeInt32Array(arr: Int32Array | number[], e?: boolean): void {
         this._realloc(arr.length * 4);
         if (
             arr instanceof Int32Array &&
-            (this.byteOffset + this.position) % arr.BYTES_PER_ELEMENT == 0
+            (this.byteOffset + this.position) % arr.BYTES_PER_ELEMENT === 0
         ) {
             DataStream.memcpy(
                 this._buffer,
@@ -612,6 +608,7 @@ export default class DataStream {
             );
             this.mapInt32Array(arr.length, e);
         } else {
+            // tslint:disable-next-line prefer-for-of
             for (let i = 0; i < arr.length; i++) {
                 this.writeInt32(arr[i], e);
             }
@@ -619,16 +616,16 @@ export default class DataStream {
     }
 
     /**
-  Writes an Int16Array of specified endianness to the DataStream.
-
-  @param {Object} arr The array to write.
-  @param {?boolean} e Endianness of the data to write.
- */
+     * Writes an Int16Array of specified endianness to the DataStream.
+     *
+     * @param {Object} arr The array to write.
+     * @param {?boolean} e Endianness of the data to write.
+     */
     writeInt16Array(arr: Int16Array | number[], e?: boolean): void {
         this._realloc(arr.length * 2);
         if (
             arr instanceof Int16Array &&
-            (this.byteOffset + this.position) % arr.BYTES_PER_ELEMENT == 0
+            (this.byteOffset + this.position) % arr.BYTES_PER_ELEMENT === 0
         ) {
             DataStream.memcpy(
                 this._buffer,
@@ -639,6 +636,7 @@ export default class DataStream {
             );
             this.mapInt16Array(arr.length, e);
         } else {
+            // tslint:disable-next-line prefer-for-of
             for (let i = 0; i < arr.length; i++) {
                 this.writeInt16(arr[i], e);
             }
@@ -646,15 +644,15 @@ export default class DataStream {
     }
 
     /**
-  Writes an Int8Array to the DataStream.
-
-  @param {Object} arr The array to write.
- */
+     * Writes an Int8Array to the DataStream.
+     *
+     * @param {Object} arr The array to write.
+     */
     writeInt8Array(arr: Int8Array | number[]): void {
-        this._realloc(arr.length * 1);
+        this._realloc(arr.length);
         if (
             arr instanceof Int8Array &&
-            (this.byteOffset + this.position) % arr.BYTES_PER_ELEMENT == 0
+            (this.byteOffset + this.position) % arr.BYTES_PER_ELEMENT === 0
         ) {
             DataStream.memcpy(
                 this._buffer,
@@ -665,6 +663,7 @@ export default class DataStream {
             );
             this.mapInt8Array(arr.length);
         } else {
+            // tslint:disable-next-line prefer-for-of
             for (let i = 0; i < arr.length; i++) {
                 this.writeInt8(arr[i]);
             }
@@ -672,16 +671,16 @@ export default class DataStream {
     }
 
     /**
-  Writes a Uint32Array of specified endianness to the DataStream.
-
-  @param {Object} arr The array to write.
-  @param {?boolean} e Endianness of the data to write.
- */
+     * Writes a Uint32Array of specified endianness to the DataStream.
+     *
+     * @param {Object} arr The array to write.
+     * @param {?boolean} e Endianness of the data to write.
+     */
     writeUint32Array(arr: Uint32Array | number[], e?: boolean): void {
         this._realloc(arr.length * 4);
         if (
             arr instanceof Uint32Array &&
-            (this.byteOffset + this.position) % arr.BYTES_PER_ELEMENT == 0
+            (this.byteOffset + this.position) % arr.BYTES_PER_ELEMENT === 0
         ) {
             DataStream.memcpy(
                 this._buffer,
@@ -692,6 +691,7 @@ export default class DataStream {
             );
             this.mapUint32Array(arr.length, e);
         } else {
+            // tslint:disable-next-line prefer-for-of
             for (let i = 0; i < arr.length; i++) {
                 this.writeUint32(arr[i], e);
             }
@@ -699,16 +699,16 @@ export default class DataStream {
     }
 
     /**
-  Writes a Uint16Array of specified endianness to the DataStream.
-
-  @param {Object} arr The array to write.
-  @param {?boolean} e Endianness of the data to write.
- */
+     * Writes a Uint16Array of specified endianness to the DataStream.
+     *
+     * @param {Object} arr The array to write.
+     * @param {?boolean} e Endianness of the data to write.
+     */
     writeUint16Array(arr: Uint16Array | number[], e?: boolean): void {
         this._realloc(arr.length * 2);
         if (
             arr instanceof Uint16Array &&
-            (this.byteOffset + this.position) % arr.BYTES_PER_ELEMENT == 0
+            (this.byteOffset + this.position) % arr.BYTES_PER_ELEMENT === 0
         ) {
             DataStream.memcpy(
                 this._buffer,
@@ -719,6 +719,7 @@ export default class DataStream {
             );
             this.mapUint16Array(arr.length, e);
         } else {
+            // tslint:disable-next-line prefer-for-of
             for (let i = 0; i < arr.length; i++) {
                 this.writeUint16(arr[i], e);
             }
@@ -726,15 +727,15 @@ export default class DataStream {
     }
 
     /**
-  Writes a Uint8Array to the DataStream.
-
-  @param {Object} arr The array to write.
- */
+     * Writes a Uint8Array to the DataStream.
+     *
+     * @param {Object} arr The array to write.
+     */
     writeUint8Array(arr: Uint8Array | number[]): void {
         this._realloc(arr.length);
         if (
             arr instanceof Uint8Array &&
-            (this.byteOffset + this.position) % arr.BYTES_PER_ELEMENT == 0
+            (this.byteOffset + this.position) % arr.BYTES_PER_ELEMENT === 0
         ) {
             DataStream.memcpy(
                 this._buffer,
@@ -745,6 +746,7 @@ export default class DataStream {
             );
             this.mapUint8Array(arr.length);
         } else {
+            // tslint:disable-next-line prefer-for-of
             for (let i = 0; i < arr.length; i++) {
                 this.writeUint8(arr[i]);
             }
@@ -752,16 +754,16 @@ export default class DataStream {
     }
 
     /**
-  Writes a Float64Array of specified endianness to the DataStream.
-
-  @param {Object} arr The array to write.
-  @param {?boolean} e Endianness of the data to write.
- */
+     * Writes a Float64Array of specified endianness to the DataStream.
+     *
+     * @param {Object} arr The array to write.
+     * @param {?boolean} e Endianness of the data to write.
+     */
     writeFloat64Array(arr: Float64Array | number[], e?: boolean): void {
         this._realloc(arr.length * 8);
         if (
             arr instanceof Float64Array &&
-            (this.byteOffset + this.position) % arr.BYTES_PER_ELEMENT == 0
+            (this.byteOffset + this.position) % arr.BYTES_PER_ELEMENT === 0
         ) {
             DataStream.memcpy(
                 this._buffer,
@@ -772,6 +774,7 @@ export default class DataStream {
             );
             this.mapFloat64Array(arr.length, e);
         } else {
+            // tslint:disable-next-line prefer-for-of
             for (let i = 0; i < arr.length; i++) {
                 this.writeFloat64(arr[i], e);
             }
@@ -779,16 +782,16 @@ export default class DataStream {
     }
 
     /**
-  Writes a Float32Array of specified endianness to the DataStream.
-
-  @param {Object} arr The array to write.
-  @param {?boolean} e Endianness of the data to write.
- */
+     * Writes a Float32Array of specified endianness to the DataStream.
+     *
+     * @param {Object} arr The array to write.
+     * @param {?boolean} e Endianness of the data to write.
+     */
     writeFloat32Array(arr: Float32Array | number[], e?: boolean): void {
         this._realloc(arr.length * 4);
         if (
             arr instanceof Float32Array &&
-            (this.byteOffset + this.position) % arr.BYTES_PER_ELEMENT == 0
+            (this.byteOffset + this.position) % arr.BYTES_PER_ELEMENT === 0
         ) {
             DataStream.memcpy(
                 this._buffer,
@@ -799,6 +802,7 @@ export default class DataStream {
             );
             this.mapFloat32Array(arr.length, e);
         } else {
+            // tslint:disable-next-line prefer-for-of
             for (let i = 0; i < arr.length; i++) {
                 this.writeFloat32(arr[i], e);
             }
@@ -806,11 +810,11 @@ export default class DataStream {
     }
 
     /**
-  Reads a 32-bit int from the DataStream with the desired endianness.
-
-  @param {?boolean} e Endianness of the number.
-  @return {number} The read number.
- */
+     * Reads a 32-bit int from the DataStream with the desired endianness.
+     *
+     * @param {?boolean} e Endianness of the number.
+     * @return {number} The read number.
+     */
     readInt32(e?: boolean): number {
         const v = this._dataView.getInt32(
             this.position,
@@ -821,11 +825,11 @@ export default class DataStream {
     }
 
     /**
-  Reads a 16-bit int from the DataStream with the desired endianness.
-
-  @param {?boolean} e Endianness of the number.
-  @return {number} The read number.
- */
+     * Reads a 16-bit int from the DataStream with the desired endianness.
+     *
+     * @param {?boolean} e Endianness of the number.
+     * @return {number} The read number.
+     */
     readInt16(e?: boolean): number {
         const v = this._dataView.getInt16(
             this.position,
@@ -836,10 +840,10 @@ export default class DataStream {
     }
 
     /**
-  Reads an 8-bit int from the DataStream.
-
-  @return {number} The read number.
- */
+     * Reads an 8-bit int from the DataStream.
+     *
+     * @return {number} The read number.
+     */
     readInt8(): number {
         const v = this._dataView.getInt8(this.position);
         this.position += 1;
@@ -847,11 +851,11 @@ export default class DataStream {
     }
 
     /**
-  Reads a 32-bit unsigned int from the DataStream with the desired endianness.
-
-  @param {?boolean} e Endianness of the number.
-  @return {number} The read number.
- */
+     * Reads a 32-bit unsigned int from the DataStream with the desired endianness.
+     *
+     * @param {?boolean} e Endianness of the number.
+     * @return {number} The read number.
+     */
     readUint32(e?: boolean): number {
         const v = this._dataView.getUint32(
             this.position,
@@ -862,11 +866,11 @@ export default class DataStream {
     }
 
     /**
-  Reads a 16-bit unsigned int from the DataStream with the desired endianness.
-
-  @param {?boolean} e Endianness of the number.
-  @return {number} The read number.
- */
+     * Reads a 16-bit unsigned int from the DataStream with the desired endianness.
+     *
+     * @param {?boolean} e Endianness of the number.
+     * @return {number} The read number.
+     */
     readUint16(e?: boolean): number {
         const v = this._dataView.getUint16(
             this.position,
@@ -877,10 +881,10 @@ export default class DataStream {
     }
 
     /**
-  Reads an 8-bit unsigned int from the DataStream.
-
-  @return {number} The read number.
- */
+     * Reads an 8-bit unsigned int from the DataStream.
+     *
+     * @return {number} The read number.
+     */
     readUint8(): number {
         const v = this._dataView.getUint8(this.position);
         this.position += 1;
@@ -888,11 +892,11 @@ export default class DataStream {
     }
 
     /**
-  Reads a 32-bit float from the DataStream with the desired endianness.
-
-  @param {?boolean} e Endianness of the number.
-  @return {number} The read number.
- */
+     * Reads a 32-bit float from the DataStream with the desired endianness.
+     *
+     * @param {?boolean} e Endianness of the number.
+     * @return {number} The read number.
+     */
     readFloat32(e?: boolean): number {
         const v = this._dataView.getFloat32(
             this.position,
@@ -903,11 +907,11 @@ export default class DataStream {
     }
 
     /**
-  Reads a 64-bit float from the DataStream with the desired endianness.
-
-  @param {?boolean} e Endianness of the number.
-  @return {number} The read number.
- */
+     * Reads a 64-bit float from the DataStream with the desired endianness.
+     *
+     * @param {?boolean} e Endianness of the number.
+     * @return {number} The read number.
+     */
     readFloat64(e?: boolean): number {
         const v = this._dataView.getFloat64(
             this.position,
@@ -918,11 +922,11 @@ export default class DataStream {
     }
 
     /**
-  Writes a 32-bit int to the DataStream with the desired endianness.
-
-  @param {number} v Number to write.
-  @param {?boolean} e Endianness of the number.
- */
+     * Writes a 32-bit int to the DataStream with the desired endianness.
+     *
+     * @param {number} v Number to write.
+     * @param {?boolean} e Endianness of the number.
+     */
     writeInt32(v: number, e?: boolean): void {
         this._realloc(4);
         this._dataView.setInt32(
@@ -934,11 +938,11 @@ export default class DataStream {
     }
 
     /**
-  Writes a 16-bit int to the DataStream with the desired endianness.
-
-  @param {number} v Number to write.
-  @param {?boolean} e Endianness of the number.
- */
+     * Writes a 16-bit int to the DataStream with the desired endianness.
+     *
+     * @param {number} v Number to write.
+     * @param {?boolean} e Endianness of the number.
+     */
     writeInt16(v: number, e?: boolean): void {
         this._realloc(2);
         this._dataView.setInt16(
@@ -950,10 +954,10 @@ export default class DataStream {
     }
 
     /**
-  Writes an 8-bit int to the DataStream.
-
-  @param {number} v Number to write.
- */
+     * Writes an 8-bit int to the DataStream.
+     *
+     * @param {number} v Number to write.
+     */
     writeInt8(v: number): void {
         this._realloc(1);
         this._dataView.setInt8(this.position, v);
@@ -961,11 +965,11 @@ export default class DataStream {
     }
 
     /**
-  Writes a 32-bit unsigned int to the DataStream with the desired endianness.
-
-  @param {number} v Number to write.
-  @param {?boolean} e Endianness of the number.
- */
+     * Writes a 32-bit unsigned int to the DataStream with the desired endianness.
+     *
+     * @param {number} v Number to write.
+     * @param {?boolean} e Endianness of the number.
+     */
     writeUint32(v: number, e?: boolean): void {
         this._realloc(4);
         this._dataView.setUint32(
@@ -977,11 +981,11 @@ export default class DataStream {
     }
 
     /**
-  Writes a 16-bit unsigned int to the DataStream with the desired endianness.
-
-  @param {number} v Number to write.
-  @param {?boolean} e Endianness of the number.
- */
+     * Writes a 16-bit unsigned int to the DataStream with the desired endianness.
+     *
+     * @param {number} v Number to write.
+     * @param {?boolean} e Endianness of the number.
+     */
     writeUint16(v: number, e?: boolean): void {
         this._realloc(2);
         this._dataView.setUint16(
@@ -993,10 +997,10 @@ export default class DataStream {
     }
 
     /**
-  Writes an 8-bit unsigned  int to the DataStream.
-
-  @param {number} v Number to write.
- */
+     * Writes an 8-bit unsigned  int to the DataStream.
+     *
+     * @param {number} v Number to write.
+     */
     writeUint8(v: number): void {
         this._realloc(1);
         this._dataView.setUint8(this.position, v);
@@ -1004,11 +1008,11 @@ export default class DataStream {
     }
 
     /**
-  Writes a 32-bit float to the DataStream with the desired endianness.
-
-  @param {number} v Number to write.
-  @param {?boolean} e Endianness of the number.
- */
+     * Writes a 32-bit float to the DataStream with the desired endianness.
+     *
+     * @param {number} v Number to write.
+     * @param {?boolean} e Endianness of the number.
+     */
     writeFloat32(v: number, e?: boolean): void {
         this._realloc(4);
         this._dataView.setFloat32(
@@ -1020,11 +1024,11 @@ export default class DataStream {
     }
 
     /**
-  Writes a 64-bit float to the DataStream with the desired endianness.
-
-  @param {number} v Number to write.
-  @param {?boolean} e Endianness of the number.
- */
+     * Writes a 64-bit float to the DataStream with the desired endianness.
+     *
+     * @param {number} v Number to write.
+     * @param {?boolean} e Endianness of the number.
+     */
     writeFloat64(v: number, e?: boolean): void {
         this._realloc(8);
         this._dataView.setFloat64(
@@ -1036,25 +1040,25 @@ export default class DataStream {
     }
 
     /**
-  Native endianness. Either DataStream.BIG_ENDIAN or DataStream.LITTLE_ENDIAN
-  depending on the platform endianness.
-
-  @type {boolean}
- */
+     * Native endianness. Either DataStream.BIG_ENDIAN or DataStream.LITTLE_ENDIAN
+     * depending on the platform endianness.
+     *
+     * @type {boolean}
+     */
     static readonly endianness: boolean = new Int8Array(
         new Int16Array([1]).buffer
     )[0] > 0;
 
     /**
-  Copies byteLength bytes from the src buffer at srcOffset to the
-  dst buffer at dstOffset.
-
-  @param {Object} dst Destination ArrayBuffer to write to.
-  @param {number} dstOffset Offset to the destination ArrayBuffer.
-  @param {Object} src Source ArrayBuffer to read from.
-  @param {number} srcOffset Offset to the source ArrayBuffer.
-  @param {number} byteLength Number of bytes to copy.
- */
+     * Copies byteLength bytes from the src buffer at srcOffset to the
+     * dst buffer at dstOffset.
+     *
+     * @param {Object} dst Destination ArrayBuffer to write to.
+     * @param {number} dstOffset Offset to the destination ArrayBuffer.
+     * @param {Object} src Source ArrayBuffer to read from.
+     * @param {number} srcOffset Offset to the source ArrayBuffer.
+     * @param {number} byteLength Number of bytes to copy.
+     */
     static memcpy(
         dst: ArrayBufferLike,
         dstOffset: number,
@@ -1068,31 +1072,31 @@ export default class DataStream {
     }
 
     /**
-  Converts array to native endianness in-place.
-
-  @param {Object} array Typed array to convert.
-  @param {boolean} arrayIsLittleEndian True if the data in the array is
-                                       little-endian. Set false for big-endian.
-  @return {Object} The converted typed array.
- */
+     * Converts array to native endianness in-place.
+     *
+     * @param {Object} array Typed array to convert.
+     * @param {boolean} arrayIsLittleEndian True if the data in the array is
+     * little-endian. Set false for big-endian.
+     * @return {Object} The converted typed array.
+     */
     static arrayToNative(array, arrayIsLittleEndian: boolean) {
-        if (arrayIsLittleEndian == this.endianness) {
+        if (arrayIsLittleEndian === this.endianness) {
             return array;
         } else {
-            return this.flipArrayEndianness(array); //???
+            return this.flipArrayEndianness(array); // ???
         }
     }
 
     /**
-  Converts native endianness array to desired endianness in-place.
-
-  @param {Object} array Typed array to convert.
-  @param {boolean} littleEndian True if the converted array should be
-                                little-endian. Set false for big-endian.
-  @return {Object} The converted typed array.
- */
+     * Converts native endianness array to desired endianness in-place.
+     *
+     * @param {Object} array Typed array to convert.
+     * @param {boolean} littleEndian True if the converted array should be
+     * little-endian. Set false for big-endian.
+     * @return {Object} The converted typed array.
+     */
     static nativeToEndian(array: TypedArray, littleEndian: boolean) {
-        if (this.endianness == littleEndian) {
+        if (this.endianness === littleEndian) {
             return array;
         } else {
             return this.flipArrayEndianness(array);
@@ -1100,11 +1104,11 @@ export default class DataStream {
     }
 
     /**
-  Flips typed array endianness in-place.
-
-  @param {Object} array Typed array to flip.
-  @return {Object} The converted typed array.
- */
+     * Flips typed array endianness in-place.
+     *
+     * @param {Object} array Typed array to flip.
+     * @return {Object} The converted typed array.
+     */
     static flipArrayEndianness(array: TypedArray) {
         const u8 = new Uint8Array(
             array.buffer,
@@ -1113,6 +1117,7 @@ export default class DataStream {
         );
         for (let i = 0; i < array.byteLength; i += array.BYTES_PER_ELEMENT) {
             for (
+                // tslint:disable-next-line one-variable-per-declaration
                 let j = i + array.BYTES_PER_ELEMENT - 1, k = i;
                 j > k;
                 j--, k++
@@ -1126,21 +1131,21 @@ export default class DataStream {
     }
 
     /**
-  Creates an array from an array of character codes.
-  Uses String.fromCharCode in chunks for memory efficiency and then concatenates
-  the resulting string chunks.
-
-  @param {array} array Array of character codes.
-  @return {string} String created from the character codes.
-**/
+     * Creates an array from an array of character codes.
+     * Uses String.fromCharCode in chunks for memory efficiency and then concatenates
+     * the resulting string chunks.
+     *
+     * @param {TypedArray} array Array of character codes.
+     * @return {string} String created from the character codes.
+     */
     static createStringFromArray(array: TypedArray) {
-        const chunk_size = 0x8000;
+        const chunkSize = 0x8000;
         const chunks = [];
-        for (let i = 0; i < array.length; i += chunk_size) {
+        for (let i = 0; i < array.length; i += chunkSize) {
             chunks.push(
                 String.fromCharCode.apply(
                     null,
-                    array.subarray(i, i + chunk_size)
+                    array.subarray(i, i + chunkSize)
                 )
             );
         }
@@ -1148,69 +1153,69 @@ export default class DataStream {
     }
 
     /**
-  Seek position where DataStream#readStruct ran into a problem.
-  Useful for debugging struct parsing.
-
-  @type {number}
- */
+     * Seek position where DataStream#readStruct ran into a problem.
+     * Useful for debugging struct parsing.
+     *
+     * @type {number}
+     */
     failurePosition = 0;
 
     /**
-  Reads a struct of data from the DataStream. The struct is defined as
-  a flat array of [name, type]-pairs. See the example below:
-
-  ds.readStruct([
-    'headerTag', 'uint32', // Uint32 in DataStream endianness.
-    'headerTag2', 'uint32be', // Big-endian Uint32.
-    'headerTag3', 'uint32le', // Little-endian Uint32.
-    'array', ['[]', 'uint32', 16], // Uint32Array of length 16.
-    'array2Length', 'uint32',
-    'array2', ['[]', 'uint32', 'array2Length'] // Uint32Array of length array2Length
-  ]);
-
-  The possible values for the type are as follows:
-
-  // Number types
-
-  // Unsuffixed number types use DataStream endianness.
-  // To explicitly specify endianness, suffix the type with
-  // 'le' for little-endian or 'be' for big-endian,
-  // e.g. 'int32be' for big-endian int32.
-
-  'uint8' -- 8-bit unsigned int
-  'uint16' -- 16-bit unsigned int
-  'uint32' -- 32-bit unsigned int
-  'int8' -- 8-bit int
-  'int16' -- 16-bit int
-  'int32' -- 32-bit int
-  'float32' -- 32-bit float
-  'float64' -- 64-bit float
-
-  // String types
-  'cstring' -- ASCII string terminated by a zero byte.
-  'string:N' -- ASCII string of length N, where N is a literal integer.
-  'string:variableName' -- ASCII string of length $variableName,
-    where 'variableName' is a previously parsed number in the current struct.
-  'string,CHARSET:N' -- String of byteLength N encoded with given CHARSET.
-  'u16string:N' -- UCS-2 string of length N in DataStream endianness.
-  'u16stringle:N' -- UCS-2 string of length N in little-endian.
-  'u16stringbe:N' -- UCS-2 string of length N in big-endian.
-
-  // Complex types
-  [name, type, name_2, type_2, ..., name_N, type_N] -- Struct
-  function(dataStream, struct) {} -- Callback function to read and return data.
-  {get: function(dataStream, struct) {},
-   set: function(dataStream, struct) {}}
-  -- Getter/setter functions to read and return data, handy for using the same
-     struct definition for reading and writing structs.
-  ['[]', type, length] -- Array of given type and length. The length can be either
-                        a number, a string that references a previously-read
-                        field, or a callback function(struct, dataStream, type){}.
-                        If length is '*', reads in as many elements as it can.
-
-  @param {Object} structDefinition Struct definition object.
-  @return {Object} The read struct. Null if failed to read struct.
- */
+     * Reads a struct of data from the DataStream. The struct is defined as
+     * a flat array of [name, type]-pairs. See the example below:
+     *
+     * ds.readStruct([
+     * 'headerTag', 'uint32', // Uint32 in DataStream endianness.
+     * 'headerTag2', 'uint32be', // Big-endian Uint32.
+     * 'headerTag3', 'uint32le', // Little-endian Uint32.
+     * 'array', ['[]', 'uint32', 16], // Uint32Array of length 16.
+     * 'array2Length', 'uint32',
+     * 'array2', ['[]', 'uint32', 'array2Length'] // Uint32Array of length array2Length
+     * ]);
+     *
+     * The possible values for the type are as follows:
+     *
+     * // Number types
+     *
+     * // Unsuffixed number types use DataStream endianness.
+     * // To explicitly specify endianness, suffix the type with
+     * // 'le' for little-endian or 'be' for big-endian,
+     * // e.g. 'int32be' for big-endian int32.
+     *
+     * 'uint8' -- 8-bit unsigned int
+     * 'uint16' -- 16-bit unsigned int
+     * 'uint32' -- 32-bit unsigned int
+     * 'int8' -- 8-bit int
+     * 'int16' -- 16-bit int
+     * 'int32' -- 32-bit int
+     * 'float32' -- 32-bit float
+     * 'float64' -- 64-bit float
+     *
+     * // String types
+     * 'cstring' -- ASCII string terminated by a zero byte.
+     * 'string:N' -- ASCII string of length N, where N is a literal integer.
+     * 'string:variableName' -- ASCII string of length $variableName,
+     * where 'variableName' is a previously parsed number in the current struct.
+     * 'string,CHARSET:N' -- String of byteLength N encoded with given CHARSET.
+     * 'u16string:N' -- UCS-2 string of length N in DataStream endianness.
+     * 'u16stringle:N' -- UCS-2 string of length N in little-endian.
+     * 'u16stringbe:N' -- UCS-2 string of length N in big-endian.
+     *
+     * // Complex types
+     * [name, type, name_2, type_2, ..., name_N, type_N] -- Struct
+     * function(dataStream, struct) {} -- Callback function to read and return data.
+     * {get: function(dataStream, struct) {},
+     *  set: function(dataStream, struct) {}}
+     * -- Getter/setter functions to read and return data, handy for using the same
+     * struct definition for reading and writing structs.
+     * ['[]', type, length] -- Array of given type and length. The length can be either
+     * a number, a string that references a previously-read
+     * field, or a callback function(struct, dataStream, type){}.
+     * If length is '*', reads in as many elements as it can.
+     *
+     * @param {Object} structDefinition Struct definition object.
+     * @return {Object} The read struct. Null if failed to read struct.
+     */
     readStruct(structDefinition: StructRead[]): object {
         const struct = {};
         let t: StructRead;
@@ -1220,7 +1225,7 @@ export default class DataStream {
             t = structDefinition[i + 1];
             v = this.readType(t, struct);
             if (v == null) {
-                if (this.failurePosition == 0) {
+                if (this.failurePosition === 0) {
                     this.failurePosition = this.position;
                 }
                 this.position = p;
@@ -1232,12 +1237,12 @@ export default class DataStream {
     }
 
     /**
-  Read UCS-2 string of desired length and endianness from the DataStream.
-
-  @param {number} length The length of the string to read.
-  @param {boolean} endianness The endianness of the string data in the DataStream.
-  @return {string} The read string.
- */
+     * Read UCS-2 string of desired length and endianness from the DataStream.
+     *
+     * @param {number} length The length of the string to read.
+     * @param {boolean} endianness The endianness of the string data in the DataStream.
+     * @return {string} The read string.
+     */
     readUCS2String(length: number, endianness?: boolean): string {
         return DataStream.createStringFromArray(
             this.readUint16Array(length, endianness)
@@ -1245,15 +1250,15 @@ export default class DataStream {
     }
 
     /**
-  Write a UCS-2 string of desired endianness to the DataStream. The
-  lengthOverride argument lets you define the number of characters to write.
-  If the string is shorter than lengthOverride, the extra space is padded with
-  zeroes.
-
-  @param {string} str The string to write.
-  @param {?boolean} endianness The endianness to use for the written string data.
-  @param {?number} lengthOverride The number of characters to write.
- */
+     * Write a UCS-2 string of desired endianness to the DataStream. The
+     * lengthOverride argument lets you define the number of characters to write.
+     * If the string is shorter than lengthOverride, the extra space is padded with
+     * zeroes.
+     *
+     * @param {string} str The string to write.
+     * @param {?boolean} endianness The endianness to use for the written string data.
+     * @param {?number} lengthOverride The number of characters to write.
+     */
     writeUCS2String(
         str: string,
         endianness?: boolean,
@@ -1272,15 +1277,15 @@ export default class DataStream {
     }
 
     /**
-  Read a string of desired length and encoding from the DataStream.
-
-  @param {number} length The length of the string to read in bytes.
-  @param {?string} encoding The encoding of the string data in the DataStream.
-                            Defaults to ASCII.
-  @return {string} The read string.
- */
+     * Read a string of desired length and encoding from the DataStream.
+     *
+     * @param {number} length The length of the string to read in bytes.
+     * @param {?string} encoding The encoding of the string data in the DataStream.
+     * Defaults to ASCII.
+     * @return {string} The read string.
+     */
     readString(length: number, encoding?: string): string {
-        if (encoding == null || encoding == "ASCII") {
+        if (encoding == null || encoding === "ASCII") {
             return DataStream.createStringFromArray(
                 this.mapUint8Array(
                     length == null ? this.byteLength - this.position : length
@@ -1292,15 +1297,15 @@ export default class DataStream {
     }
 
     /**
-  Writes a string of desired length and encoding to the DataStream.
-
-  @param {string} s The string to write.
-  @param {?string} encoding The encoding for the written string data.
-                            Defaults to ASCII.
-  @param {?number} length The number of characters to write.
- */
+     * Writes a string of desired length and encoding to the DataStream.
+     *
+     * @param {string} s The string to write.
+     * @param {?string} encoding The encoding for the written string data.
+     * Defaults to ASCII.
+     * @param {?number} length The number of characters to write.
+     */
     writeString(s: string, encoding?: string, length?: number): void {
-        if (encoding == null || encoding == "ASCII") {
+        if (encoding == null || encoding === "ASCII") {
             if (length != null) {
                 let i: number;
                 const len = Math.min(s.length, length);
@@ -1323,12 +1328,12 @@ export default class DataStream {
     }
 
     /**
-  Read null-terminated string of desired length from the DataStream. Truncates
-  the returned string so that the null byte is not a part of it.
-
-  @param {?number} length The length of the string to read.
-  @return {string} The read string.
- */
+     * Read null-terminated string of desired length from the DataStream. Truncates
+     * the returned string so that the null byte is not a part of it.
+     *
+     * @param {?number} length The length of the string to read.
+     * @return {string} The read string.
+     */
     readCString(length?: number): string {
         const blen = this.byteLength - this.position;
         const u8 = new Uint8Array(
@@ -1340,27 +1345,27 @@ export default class DataStream {
             len = Math.min(length, blen);
         }
         let i = 0;
-        for (; i < len && u8[i] != 0; i++) {
+        for (; i < len && u8[i] !== 0; i++) {
             // find first zero byte
         }
         const s = DataStream.createStringFromArray(this.mapUint8Array(i));
         if (length != null) {
             this.position += len - i;
-        } else if (i != blen) {
+        } else if (i !== blen) {
             this.position += 1; // trailing zero if not at end of buffer
         }
         return s;
     }
 
     /**
-  Writes a null-terminated string to DataStream and zero-pads it to length
-  bytes. If length is not given, writes the string followed by a zero.
-  If string is longer than length, the written part of the string does not have
-  a trailing zero.
-
-  @param {string} s The string to write.
-  @param {?number} length The number of characters to write.
- */
+     * Writes a null-terminated string to DataStream and zero-pads it to length
+     * bytes. If length is not given, writes the string followed by a zero.
+     * If string is longer than length, the written part of the string does not have
+     * a trailing zero.
+     *
+     * @param {string} s The string to write.
+     * @param {?number} length The number of characters to write.
+     */
     writeCString(s: string, length?: number): void {
         if (length != null) {
             let i: number;
@@ -1380,43 +1385,41 @@ export default class DataStream {
     }
 
     /**
-  Reads an object of type t from the DataStream, passing struct as the thus-far
-  read struct to possible callbacks that refer to it. Used by readStruct for
-  reading in the values, so the type is one of the readStruct types.
-
-  @param {Object} t Type of the object to read.
-  @param {?Object} struct Struct to refer to when resolving length references
-                          and for calling callbacks.
-  @return {?Object} Returns the object on successful read, null on unsuccessful.
- */
+     * Reads an object of type t from the DataStream, passing struct as the thus-far
+     * read struct to possible callbacks that refer to it. Used by readStruct for
+     * reading in the values, so the type is one of the readStruct types.
+     *
+     * @param {Object} t Type of the object to read.
+     * @param {?Object} struct Struct to refer to when resolving length references
+     * and for calling callbacks.
+     * @return {?Object} Returns the object on successful read, null on unsuccessful.
+     */
     readType(t: StructRead, struct: object): any {
-        if (typeof t == "function") {
+        if (typeof t === "function") {
             return t(this, struct);
-        } else if (typeof t == "object" && !(t instanceof Array)) {
+        } else if (typeof t === "object" && !(t instanceof Array)) {
             return t.get(this, struct);
-        } else if (t instanceof Array && t.length != 3) {
+        } else if (t instanceof Array && t.length !== 3) {
             return this.readStruct(t as StructRead[]);
         }
         let v = null;
         let lengthOverride = null;
         let charset = "ASCII";
         const pos = this.position;
-        if (typeof t == "string" && /:/.test(t)) {
+        if (typeof t === "string" && /:/.test(t)) {
             const tp = t.split(":");
             t = tp[0];
             const len = tp[1];
 
             // allow length to be previously parsed variable
-            // e.g. 'string:fieldLength', if `fieldLength` has
-            // been parsed previously.
-            if (struct[len] != null) {
-                lengthOverride = parseInt(struct[len]);
-            } else {
-                // assume literal integer e.g., 'string:4'
-                lengthOverride = parseInt(len);
-            }
+            // e.g. 'string:fieldLength', if `fieldLength` has been parsed previously.
+            // else, assume literal integer e.g., 'string:4'
+            lengthOverride = parseInt(
+                struct[len] != null ? struct[len] : len,
+                10
+            );
         }
-        if (typeof t == "string" && /,/.test(t)) {
+        if (typeof t === "string" && /,/.test(t)) {
             const tp = t.split(",");
             t = tp[0];
             charset = tp[1];
@@ -1510,18 +1513,18 @@ export default class DataStream {
                 break;
 
             default:
-                if (t.length == 3) {
+                if (t.length === 3) {
                     const ta = t[1] as string;
                     const len = t[2];
                     let length = 0;
-                    if (typeof len == "function") {
+                    if (typeof len === "function") {
                         length = len(struct, this, t);
-                    } else if (typeof len == "string" && struct[len] != null) {
-                        length = parseInt(struct[len]);
+                    } else if (typeof len === "string" && struct[len] != null) {
+                        length = parseInt(struct[len], 10);
                     } else {
-                        length = parseInt(len as string);
+                        length = parseInt(len as string, 10);
                     }
-                    if (typeof ta == "string") {
+                    if (typeof ta === "string") {
                         const tap = ta.replace(/(le|be)$/, "");
                         let endianness = null;
                         if (/le$/.test(ta)) {
@@ -1529,7 +1532,7 @@ export default class DataStream {
                         } else if (/be$/.test(ta)) {
                             endianness = DataStream.BIG_ENDIAN;
                         }
-                        if (len == "*") {
+                        if (len === "*") {
                             length = null;
                         }
                         switch (tap) {
@@ -1576,7 +1579,7 @@ export default class DataStream {
                                 break;
                         }
                     } else {
-                        if (len == "*") {
+                        if (len === "*") {
                             v = [];
                             while (true) {
                                 const p = this.position;
@@ -1611,15 +1614,15 @@ export default class DataStream {
     }
 
     /**
- * Writes a struct to the DataStream. Takes a structDefinition that gives the
- * types and a struct object that gives the values. Refer to readStruct for the
- * structure of structDefinition.
- *
- * @param {Object} structDefinition Type definition of the struct.
- * @param {Object} struct The struct data object.
- * @param needConvertStructDef if set (== true) then structDefinition will be convert using
- *        `DataStream.defWriteStruct` before writing.
- */
+     * Writes a struct to the DataStream. Takes a structDefinition that gives the
+     * types and a struct object that gives the values. Refer to readStruct for the
+     * structure of structDefinition.
+     *
+     * @param {Object} structDefinition Type definition of the struct.
+     * @param {Object} struct The struct data object.
+     * @param needConvertStructDef if set (== true) then structDefinition will be convert using
+     *        `DataStream.defWriteStruct` before writing.
+     */
     writeStruct(
         structDefinition: StructWrite[] | StructRead[],
         struct: object,
@@ -1640,21 +1643,22 @@ export default class DataStream {
             );
         }
     }
+
     /**
- * Convert a struct definition using for `readStruct` to a struct definition that can be using for `writeStruct`
- * @param readStructDef ex ['len', 'uint8', 'greet', 'string,utf-8:some_len_var_name']
- * @param struct The actual struct will be writing, ex {greet: 'Xin Chào'}
- * @return {Array<*>} the readStructDef with all string type that has encoding specified
- *          (ex 'string,utf-8:some_len_var_name')
- *            be replaced by a `function` that write the correspond string field in `struct` (ex, struct.greet)
- * @side-effect struct is modified: struct.<some_len_var_name> is set = length of the string field
- *          (ex, struct.greet) after encode.
- */
+     * Convert a struct definition using for `readStruct` to a struct definition that can be using for `writeStruct`
+     * @param readStructDef ex ['len', 'uint8', 'greet', 'string,utf-8:some_len_var_name']
+     * @param struct The actual struct will be writing, ex {greet: 'Xin Chào'}
+     * @return {Array<*>} the readStructDef with all string type that has encoding specified
+     *          (ex 'string,utf-8:some_len_var_name')
+     *            be replaced by a `function` that write the correspond string field in `struct` (ex, struct.greet)
+     * @side-effect struct is modified: struct.<some_len_var_name> is set = length of the string field
+     *          (ex, struct.greet) after encode.
+     */
     static defWriteStruct(readStructDef: StructRead[], struct: object) {
         const ret = [];
         for (let i = readStructDef.length - 2; i >= 0; i -= 2) {
-            let t = readStructDef[i + 1],
-                v = readStructDef[i];
+            let t = readStructDef[i + 1];
+            const v = readStructDef[i];
             if (typeof t === "string" && /,.+:[A-Za-z_]/.test(t)) {
                 let tp = t.split(":");
                 const len = tp[1];
@@ -1666,9 +1670,7 @@ export default class DataStream {
                     struct[v as string]
                 );
                 struct[len] = uint8Array.length;
-                ret.push(function(ds) {
-                    ds.writeUint8Array(uint8Array);
-                });
+                ret.push(ds => ds.writeUint8Array(uint8Array));
             } else {
                 ret.push(t);
             }
@@ -1678,37 +1680,35 @@ export default class DataStream {
     }
 
     /**
-  Writes object v of type t to the DataStream.
-
-  @param {Object} t Type of data to write.
-  @param {Object} v Value of data to write.
-  @param {Object} struct Struct to pass to write callback functions.
-  */
+     * Writes object v of type t to the DataStream.
+     *
+     * @param {Object} t Type of data to write.
+     * @param {Object} v Value of data to write.
+     * @param {Object} struct Struct to pass to write callback functions.
+     */
     writeType(t: StructWrite, v: any, struct: object) {
-        if (typeof t == "function") {
+        if (typeof t === "function") {
             return t(this, v, struct);
-        } else if (typeof t == "object" && !(t instanceof Array)) {
+        } else if (typeof t === "object" && !(t instanceof Array)) {
             return t.set(this, v, struct);
         }
         let lengthOverride = null;
         let charset = "ASCII";
         const pos = this.position;
-        if (typeof t == "string" && /:/.test(t)) {
+        if (typeof t === "string" && /:/.test(t)) {
             const tp = t.split(":");
             t = tp[0];
             const len = tp[1];
 
             // allow length to be previously parsed variable
-            // e.g. 'string:fieldLength', if `fieldLength` has
-            // been parsed previously.
-            if (struct[len] != null) {
-                lengthOverride = parseInt(struct[len]);
-            } else {
-                // assume literal integer e.g., 'string:4'
-                lengthOverride = parseInt(len);
-            }
+            // e.g. 'string:fieldLength', if `fieldLength` has been parsed previously.
+            // else, assume literal integer e.g., 'string:4'
+            lengthOverride = parseInt(
+                struct[len] != null ? struct[len] : len,
+                10
+            );
         }
-        if (typeof t == "string" && /,/.test(t)) {
+        if (typeof t === "string" && /,/.test(t)) {
             const tp = t.split(",");
             t = tp[0];
             charset = tp[1];
@@ -1805,10 +1805,10 @@ export default class DataStream {
 
             default:
                 // t instanceof Array
-                if (t.length == 3) {
+                if (t.length === 3) {
                     const ta: StructWrite = t[1];
-                    for (let i = 0; i < v.length; i++) {
-                        this.writeType(ta, v[i], struct);
+                    for (const vi of v) {
+                        this.writeType(ta, vi, struct);
                     }
                     break;
                 } else {
