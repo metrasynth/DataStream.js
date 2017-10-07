@@ -1030,14 +1030,13 @@ failurePosition = 0;
   @param {Object} structDefinition Struct definition object.
   @return {Object} The read struct. Null if failed to read struct.
  */
-readStruct(structDefinition: StructRead[], struct?: object): object {
-  if(struct === undefined) struct = {};
+readStruct(structDefinition: StructRead[]): object {
+  const struct = {};
   let t: StructRead;
   let v;
   const p = this.position;
   for (let i=0; i<structDefinition.length; i+=2) {
     t = structDefinition[i+1];
-    console.log(this._byteLength);
     v = this.readType(t, struct);
     if (v == null) {
       if (this.failurePosition == 0) {
@@ -1196,13 +1195,12 @@ writeCString(s: string, length?: number): void {
   @return {?Object} Returns the object on successful read, null on unsuccessful.
  */
 readType(t: StructRead, struct: object): any {
-  console.log(this._byteLength);
   if (typeof t == "function") {
     return t(this, struct);
   } else if (typeof t == "object" && !(t instanceof Array)) {
     return t.get(this, struct);
   } else if (t instanceof Array && t.length != 3) {
-    return this.readStruct(t as StructRead[], struct);
+    return this.readStruct(t as StructRead[]);
   }
   let v = null;
   let lengthOverride = null;

@@ -12,6 +12,9 @@
     var DataStream_1 = require("../DataStream");
     var chai_1 = require("chai");
     require("mocha");
+    var sameMembers = function (typedArr, arr, msg) {
+        return chai_1.assert.sameMembers(Array.from(typedArr), arr, msg);
+    };
     /*
       var testType = (ds, t, elen) => test('Type:' + t, assert => {
         var i = 0;
@@ -327,8 +330,7 @@
             delete obj3.data;
             ds.seek(p);
             chai_1.expect(255).to.equal(obj3.endNote);
-            var uExpect = ds.readUint8Array(u.length);
-            chai_1.expect(u).to.deep.equal(uExpect);
+            sameMembers(ds.readUint8Array(u.length), u);
             chai_1.expect(obj).to.deep.equal(obj3);
             chai_1.expect(d1).to.deep.equal(d3);
             var def2 = [
@@ -371,7 +373,7 @@
             var o3 = ds3.readStruct(def3);
             chai_1.expect(o3.length).to.equal(8);
             chai_1.expect(o3.endNote).to.equal(255);
-            chai_1.expect(o3.data).to.deep.equal([1, 2, 3, 4, 5, 6]);
+            sameMembers(o3.data, [1, 2, 3, 4, 5, 6]);
             var def4 = [
                 'length', 'uint16be',
                 'data', {
@@ -404,7 +406,7 @@
             ds4.seek(pos);
             var o4b = ds4.readStruct(def4);
             chai_1.expect(o4).to.deep.equal(o4b);
-            chai_1.expect(u4.concat(u4)).to.deep.equal(new Uint8Array(ds4.buffer));
+            sameMembers(new Uint8Array(ds4.buffer), u4.concat(u4));
             /* Test variable-length string definition */
             var def5 = [
                 'len', 'uint8',
@@ -429,7 +431,7 @@
             chai_1.expect(', ').to.equal(o5.pad);
             chai_1.expect(o5.len2).to.equal(o5.greet2.length);
             chai_1.expect('World!').to.equal(o5.greet2);
-            chai_1.expect([0, 0, 0, 0, 0, 0, 0, 255]).to.deep.equal(o5.tail);
+            sameMembers(o5.tail, [0, 0, 0, 0, 0, 0, 0, 255]);
             var def6 = [
                 'len', 'uint8',
                 'greet', 'string,utf-8:len'
@@ -456,9 +458,9 @@
             var o6c = ds6c.readStruct(def6);
             chai_1.expect(o6).to.deep.equal(o6b);
             chai_1.expect(o6).to.deep.equal(o6c);
-            chai_1.expect(u6).to.deep.equal(new Uint8Array(ds6.buffer));
-            chai_1.expect(u6).to.deep.equal(new Uint8Array(ds6b.buffer));
-            chai_1.expect(u6).to.deep.equal(new Uint8Array(ds6c.buffer));
+            sameMembers(new Uint8Array(ds6.buffer), u6);
+            sameMembers(new Uint8Array(ds6b.buffer), u6);
+            sameMembers(new Uint8Array(ds6c.buffer), u6);
         });
     });
 });

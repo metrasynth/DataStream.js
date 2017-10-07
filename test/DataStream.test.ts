@@ -1,6 +1,9 @@
-import DataStream from "../DataStream";
-import {expect} from 'chai';
+import DataStream, {TypedArray} from "../DataStream";
+import {expect, assert} from 'chai';
 import 'mocha';
+
+const sameMembers = (typedArr: TypedArray, arr: any[], msg?: string) =>
+    assert.sameMembers(Array.from(typedArr), arr, msg);
 
 /*
   var testType = (ds, t, elen) => test('Type:' + t, assert => {
@@ -320,8 +323,7 @@ describe('DataStream', () => {
     delete obj3.data;
     ds.seek(p);
     expect(255).to.equal(obj3.endNote);
-    const uExpect = ds.readUint8Array(u.length);
-    expect(u).to.deep.equal(uExpect);
+    sameMembers(ds.readUint8Array(u.length), u);
     expect(obj).to.deep.equal(obj3);
     expect(d1).to.deep.equal(d3);
 
@@ -366,7 +368,7 @@ describe('DataStream', () => {
     var o3: any = ds3.readStruct(def3);
     expect(o3.length).to.equal(8);
     expect(o3.endNote).to.equal(255);
-    expect(o3.data).to.deep.equal([1,2,3,4,5,6]);
+    sameMembers(o3.data, [1,2,3,4,5,6]);
 
     var def4 = [
       'length', 'uint16be',
@@ -400,7 +402,7 @@ describe('DataStream', () => {
     ds4.seek(pos);
     var o4b = ds4.readStruct(def4);
     expect(o4).to.deep.equal(o4b);
-    expect(u4.concat(u4)).to.deep.equal(new Uint8Array(ds4.buffer) as any);
+    sameMembers(new Uint8Array(ds4.buffer), u4.concat(u4));
 
 	/* Test variable-length string definition */
     var def5 = [
@@ -428,7 +430,7 @@ describe('DataStream', () => {
     expect(', ').to.equal(o5.pad);
 	expect(o5.len2).to.equal(o5.greet2.length);
     expect('World!').to.equal(o5.greet2);
-    expect([0,0,0,0,0,0,0,255]).to.deep.equal(o5.tail);
+    sameMembers(o5.tail, [0,0,0,0,0,0,0,255]);
 
     var def6 = [
       'len', 'uint8',
@@ -460,9 +462,9 @@ describe('DataStream', () => {
     const o6c = ds6c.readStruct(def6);
     expect(o6).to.deep.equal(o6b);
     expect(o6).to.deep.equal(o6c);
-    expect(u6).to.deep.equal(new Uint8Array(ds6.buffer) as any);
-    expect(u6).to.deep.equal(new Uint8Array(ds6b.buffer) as any);
-    expect(u6).to.deep.equal(new Uint8Array(ds6c.buffer) as any);
+    sameMembers(new Uint8Array(ds6.buffer), u6);
+    sameMembers(new Uint8Array(ds6b.buffer), u6);
+    sameMembers(new Uint8Array(ds6c.buffer), u6);
   });
 });
 

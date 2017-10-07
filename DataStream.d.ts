@@ -554,7 +554,7 @@ export default class DataStream {
       @param {Object} structDefinition Struct definition object.
       @return {Object} The read struct. Null if failed to read struct.
      */
-    readStruct(structDefinition: StructRead[], struct?: object): object;
+    readStruct(structDefinition: StructRead[]): object;
     /**
       Read UCS-2 string of desired length and endianness from the DataStream.
     
