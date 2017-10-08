@@ -593,7 +593,7 @@ export default class DataStream {
      * @param {Object} arr The array to write.
      * @param {?boolean} e Endianness of the data to write.
      */
-    writeInt32Array(arr: Int32Array | number[], e?: boolean): void {
+    writeInt32Array(arr: Int32Array | number[], e?: boolean): DataStream {
         this._realloc(arr.length * 4);
         if (
             arr instanceof Int32Array &&
@@ -613,6 +613,7 @@ export default class DataStream {
                 this.writeInt32(arr[i], e);
             }
         }
+        return this;
     }
 
     /**
@@ -621,7 +622,7 @@ export default class DataStream {
      * @param {Object} arr The array to write.
      * @param {?boolean} e Endianness of the data to write.
      */
-    writeInt16Array(arr: Int16Array | number[], e?: boolean): void {
+    writeInt16Array(arr: Int16Array | number[], e?: boolean): DataStream {
         this._realloc(arr.length * 2);
         if (
             arr instanceof Int16Array &&
@@ -641,6 +642,7 @@ export default class DataStream {
                 this.writeInt16(arr[i], e);
             }
         }
+        return this;
     }
 
     /**
@@ -648,7 +650,7 @@ export default class DataStream {
      *
      * @param {Object} arr The array to write.
      */
-    writeInt8Array(arr: Int8Array | number[]): void {
+    writeInt8Array(arr: Int8Array | number[]): DataStream {
         this._realloc(arr.length);
         if (
             arr instanceof Int8Array &&
@@ -668,6 +670,7 @@ export default class DataStream {
                 this.writeInt8(arr[i]);
             }
         }
+        return this;
     }
 
     /**
@@ -676,7 +679,7 @@ export default class DataStream {
      * @param {Object} arr The array to write.
      * @param {?boolean} e Endianness of the data to write.
      */
-    writeUint32Array(arr: Uint32Array | number[], e?: boolean): void {
+    writeUint32Array(arr: Uint32Array | number[], e?: boolean): DataStream {
         this._realloc(arr.length * 4);
         if (
             arr instanceof Uint32Array &&
@@ -696,6 +699,7 @@ export default class DataStream {
                 this.writeUint32(arr[i], e);
             }
         }
+        return this;
     }
 
     /**
@@ -704,7 +708,7 @@ export default class DataStream {
      * @param {Object} arr The array to write.
      * @param {?boolean} e Endianness of the data to write.
      */
-    writeUint16Array(arr: Uint16Array | number[], e?: boolean): void {
+    writeUint16Array(arr: Uint16Array | number[], e?: boolean): DataStream {
         this._realloc(arr.length * 2);
         if (
             arr instanceof Uint16Array &&
@@ -724,6 +728,7 @@ export default class DataStream {
                 this.writeUint16(arr[i], e);
             }
         }
+        return this;
     }
 
     /**
@@ -731,7 +736,7 @@ export default class DataStream {
      *
      * @param {Object} arr The array to write.
      */
-    writeUint8Array(arr: Uint8Array | number[]): void {
+    writeUint8Array(arr: Uint8Array | number[]): DataStream {
         this._realloc(arr.length);
         if (
             arr instanceof Uint8Array &&
@@ -751,6 +756,7 @@ export default class DataStream {
                 this.writeUint8(arr[i]);
             }
         }
+        return this;
     }
 
     /**
@@ -759,7 +765,7 @@ export default class DataStream {
      * @param {Object} arr The array to write.
      * @param {?boolean} e Endianness of the data to write.
      */
-    writeFloat64Array(arr: Float64Array | number[], e?: boolean): void {
+    writeFloat64Array(arr: Float64Array | number[], e?: boolean): DataStream {
         this._realloc(arr.length * 8);
         if (
             arr instanceof Float64Array &&
@@ -779,6 +785,7 @@ export default class DataStream {
                 this.writeFloat64(arr[i], e);
             }
         }
+        return this;
     }
 
     /**
@@ -787,7 +794,7 @@ export default class DataStream {
      * @param {Object} arr The array to write.
      * @param {?boolean} e Endianness of the data to write.
      */
-    writeFloat32Array(arr: Float32Array | number[], e?: boolean): void {
+    writeFloat32Array(arr: Float32Array | number[], e?: boolean): DataStream {
         this._realloc(arr.length * 4);
         if (
             arr instanceof Float32Array &&
@@ -807,6 +814,7 @@ export default class DataStream {
                 this.writeFloat32(arr[i], e);
             }
         }
+        return this;
     }
 
     /**
@@ -927,7 +935,7 @@ export default class DataStream {
      * @param {number} v Number to write.
      * @param {?boolean} e Endianness of the number.
      */
-    writeInt32(v: number, e?: boolean): void {
+    writeInt32(v: number, e?: boolean): DataStream {
         this._realloc(4);
         this._dataView.setInt32(
             this.position,
@@ -935,6 +943,7 @@ export default class DataStream {
             e == null ? this.endianness : e
         );
         this.position += 4;
+        return this;
     }
 
     /**
@@ -943,7 +952,7 @@ export default class DataStream {
      * @param {number} v Number to write.
      * @param {?boolean} e Endianness of the number.
      */
-    writeInt16(v: number, e?: boolean): void {
+    writeInt16(v: number, e?: boolean): DataStream {
         this._realloc(2);
         this._dataView.setInt16(
             this.position,
@@ -951,6 +960,7 @@ export default class DataStream {
             e == null ? this.endianness : e
         );
         this.position += 2;
+        return this;
     }
 
     /**
@@ -958,10 +968,11 @@ export default class DataStream {
      *
      * @param {number} v Number to write.
      */
-    writeInt8(v: number): void {
+    writeInt8(v: number): DataStream {
         this._realloc(1);
         this._dataView.setInt8(this.position, v);
         this.position += 1;
+        return this;
     }
 
     /**
@@ -970,7 +981,7 @@ export default class DataStream {
      * @param {number} v Number to write.
      * @param {?boolean} e Endianness of the number.
      */
-    writeUint32(v: number, e?: boolean): void {
+    writeUint32(v: number, e?: boolean): DataStream {
         this._realloc(4);
         this._dataView.setUint32(
             this.position,
@@ -978,6 +989,7 @@ export default class DataStream {
             e == null ? this.endianness : e
         );
         this.position += 4;
+        return this;
     }
 
     /**
@@ -986,7 +998,7 @@ export default class DataStream {
      * @param {number} v Number to write.
      * @param {?boolean} e Endianness of the number.
      */
-    writeUint16(v: number, e?: boolean): void {
+    writeUint16(v: number, e?: boolean): DataStream {
         this._realloc(2);
         this._dataView.setUint16(
             this.position,
@@ -994,6 +1006,7 @@ export default class DataStream {
             e == null ? this.endianness : e
         );
         this.position += 2;
+        return this;
     }
 
     /**
@@ -1001,10 +1014,11 @@ export default class DataStream {
      *
      * @param {number} v Number to write.
      */
-    writeUint8(v: number): void {
+    writeUint8(v: number): DataStream {
         this._realloc(1);
         this._dataView.setUint8(this.position, v);
         this.position += 1;
+        return this;
     }
 
     /**
@@ -1013,7 +1027,7 @@ export default class DataStream {
      * @param {number} v Number to write.
      * @param {?boolean} e Endianness of the number.
      */
-    writeFloat32(v: number, e?: boolean): void {
+    writeFloat32(v: number, e?: boolean): DataStream {
         this._realloc(4);
         this._dataView.setFloat32(
             this.position,
@@ -1021,6 +1035,7 @@ export default class DataStream {
             e == null ? this.endianness : e
         );
         this.position += 4;
+        return this;
     }
 
     /**
@@ -1029,7 +1044,7 @@ export default class DataStream {
      * @param {number} v Number to write.
      * @param {?boolean} e Endianness of the number.
      */
-    writeFloat64(v: number, e?: boolean): void {
+    writeFloat64(v: number, e?: boolean): DataStream {
         this._realloc(8);
         this._dataView.setFloat64(
             this.position,
@@ -1037,6 +1052,7 @@ export default class DataStream {
             e == null ? this.endianness : e
         );
         this.position += 8;
+        return this;
     }
 
     /**
@@ -1263,7 +1279,7 @@ export default class DataStream {
         str: string,
         endianness?: boolean,
         lengthOverride?: number
-    ): void {
+    ): DataStream {
         if (lengthOverride == null) {
             lengthOverride = str.length;
         }
@@ -1274,6 +1290,7 @@ export default class DataStream {
         for (; i < lengthOverride; i++) {
             this.writeUint16(0);
         }
+        return this;
     }
 
     /**
@@ -1304,7 +1321,7 @@ export default class DataStream {
      * Defaults to ASCII.
      * @param {?number} length The number of characters to write.
      */
-    writeString(s: string, encoding?: string, length?: number): void {
+    writeString(s: string, encoding?: string, length?: number): DataStream {
         if (encoding == null || encoding === "ASCII") {
             if (length != null) {
                 let i: number;
@@ -1325,6 +1342,15 @@ export default class DataStream {
                 new TextEncoder(encoding).encode(s.substring(0, length))
             );
         }
+        return this;
+    }
+
+    /** writeUint16(utf8 length of `s`) then write utf8 `s` */
+    writeUtf8WithLen(s: string): DataStream {
+        const arr = new TextEncoder("utf-8").encode(s);
+        this.writeUint16(arr.length);
+        this.writeUint8Array(arr);
+        return this;
     }
 
     /**
@@ -1366,7 +1392,7 @@ export default class DataStream {
      * @param {string} s The string to write.
      * @param {?number} length The number of characters to write.
      */
-    writeCString(s: string, length?: number): void {
+    writeCString(s: string, length?: number): DataStream {
         if (length != null) {
             let i: number;
             const len = Math.min(s.length, length);
@@ -1382,6 +1408,7 @@ export default class DataStream {
             }
             this.writeUint8(0);
         }
+        return this;
     }
 
     /**
@@ -1627,7 +1654,7 @@ export default class DataStream {
         structDefinition: StructWrite[] | StructRead[],
         struct: object,
         needConvertStructDef: boolean = false
-    ) {
+    ): DataStream {
         if (needConvertStructDef) {
             structDefinition = DataStream.defWriteStruct(
                 structDefinition as StructRead[],
@@ -1642,6 +1669,7 @@ export default class DataStream {
                 struct
             );
         }
+        return this;
     }
 
     /**
@@ -1654,11 +1682,14 @@ export default class DataStream {
      * @side-effect struct is modified: struct.<some_len_var_name> is set = length of the string field
      *          (ex, struct.greet) after encode.
      */
-    static defWriteStruct(readStructDef: StructRead[], struct: object) {
-        const ret = [];
+    static defWriteStruct(
+        readStructDef: StructRead[],
+        struct: object
+    ): StructWrite[] {
+        const ret: StructWrite[] = [];
         for (let i = readStructDef.length - 2; i >= 0; i -= 2) {
             let t = readStructDef[i + 1];
-            const v = readStructDef[i];
+            const v = readStructDef[i] as string;
             if (typeof t === "string" && /,.+:[A-Za-z_]/.test(t)) {
                 let tp = t.split(":");
                 const len = tp[1];
@@ -1672,7 +1703,7 @@ export default class DataStream {
                 struct[len] = uint8Array.length;
                 ret.push(ds => ds.writeUint8Array(uint8Array));
             } else {
-                ret.push(t);
+                ret.push(t as StructWrite); // FIXME StructWriteFn is not compatible withi StructReadFn
             }
             ret.push(v);
         }
@@ -1686,11 +1717,13 @@ export default class DataStream {
      * @param {Object} v Value of data to write.
      * @param {Object} struct Struct to pass to write callback functions.
      */
-    writeType(t: StructWrite, v: any, struct: object) {
+    writeType(t: StructWrite, v: any, struct: object): DataStream {
         if (typeof t === "function") {
-            return t(this, v, struct);
+            t(this, v, struct);
+            return this;
         } else if (typeof t === "object" && !(t instanceof Array)) {
-            return t.set(this, v, struct);
+            t.set(this, v, struct);
+            return this;
         }
         let lengthOverride = null;
         let charset = "ASCII";
@@ -1821,5 +1854,6 @@ export default class DataStream {
             this._realloc(lengthOverride);
             this.position = pos + lengthOverride;
         }
+        return this;
     }
 }
