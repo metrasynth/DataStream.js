@@ -11,10 +11,14 @@ export type TypedArray =
     | Float32Array
     | Float64Array;
 
+/** @deprecated use DataStream.read/write(TypeDef) instead of readStruct/writeStruct */
 export type StructReadFn = (ds: DataStream, struct: object) => any;
 
+/** @deprecated use DataStream.read/write(TypeDef) instead of readStruct/writeStruct */
 export type LenFn = (struct: object, ds: DataStream, def: StructRead) => any;
+
 // https://github.com/Microsoft/TypeScript/issues/3496#issuecomment-128553540
+/** @deprecated use DataStream.read/write(TypeDef) instead of readStruct/writeStruct */
 export type StructRead =
     | string
     | StructReadFn
@@ -22,22 +26,52 @@ export type StructRead =
     | ["[]", string, string | LenFn]
     | StructReadArray;
 
+/** @deprecated use DataStream.read/write(TypeDef) instead of readStruct/writeStruct */
 // tslint:disable-next-line no-empty-interface
 export interface StructReadArray extends Array<StructRead> {}
 
+/** @deprecated use DataStream.read/write(TypeDef) instead of readStruct/writeStruct */
 export type StructWriteFn = (
     ds: DataStream,
     field: string,
     struct: object
 ) => void;
+
+/** @deprecated use DataStream.read/write(TypeDef) instead of readStruct/writeStruct */
 export type StructWrite =
     | string
     | StructWriteFn
     | {set: StructWriteFn}
     | StructWriteArray;
 
+/** @deprecated use DataStream.read/write(TypeDef) instead of readStruct/writeStruct */
 // tslint:disable-next-line no-empty-interface
 export interface StructWriteArray extends Array<StructWrite> {}
+
+/**
+ * Type endsWith '*' mean array.
+ * Type endsWith '+' mean array | utf8 string with length encoded as Uint16 & write/read before the actual array | utf8 string.
+ */
+// prettier-ignore
+export type Type =
+    "Int8" | "Int16" | "Int32" | "Uint8" | "Uint16" | "Uint32" | "Float32" | "Float64" |
+    "Int8*" | "Int16*" | "Int32*" | "Uint8*" | "Uint16*" | "Uint32*" | "Float32*" | "Float64*" |
+    "Utf8WithLen";
+
+/** [0] is object field's name to read from or write into.
+ *  [1] is its type definition
+ *  examples:
+ *  ["num", "Int16"]
+ *  ["greet", "Utf8+"]
+ *  ["obj", [
+ *      ["num", "Int8"],
+ *      ["len", "Uint16"],
+ *      ["greet", "Utf8"]]
+ *  ]
+ */
+export type TypeDef1 = [string, Type | TypeDef];
+// tslint:disable-next-line no-empty-interface
+export interface TypeDef extends Array<TypeDef1> {}
 
 /**
  * DataStream reads scalars, arrays and structs of data from an ArrayBuffer.
@@ -1231,6 +1265,8 @@ export default class DataStream {
      *
      * @param {Object} structDefinition Struct definition object.
      * @return {Object} The read struct. Null if failed to read struct.
+     *
+     * @deprecated use DataStream.read/write(TypeDef) instead of readStruct/writeStruct
      */
     readStruct(structDefinition: StructRead[]): object {
         const struct = {};
@@ -1250,6 +1286,50 @@ export default class DataStream {
             struct[structDefinition[i] as string] = v;
         }
         return struct;
+    }
+
+    /** see test/DataStream.test.ts for usage */
+    read(def: TypeDef): object {
+        const o = {};
+        let d: TypeDef1;
+        for (d of def) {
+            const v = d[0];
+            const t = d[1];
+            if (typeof t === "string") {
+                if (t.endsWith("*")) {
+                    const len = this.readUint16();
+                    o[v] = this["read" + t.substr(0, t.length - 1) + "Array"](
+                        len
+                    );
+                } else {
+                    o[v] = this["read" + t]();
+                }
+            } else {
+                o[v] = this.read(t);
+            }
+        }
+        return o;
+    }
+
+    /** see test/DataStream.test.ts for usage */
+    write(def: TypeDef, o: object): DataStream {
+        let d: TypeDef1;
+        for (d of def) {
+            const v = d[0];
+            const t = d[1];
+            if (typeof t === "string") {
+                if (t.endsWith("*")) {
+                    const arr: TypedArray | number[] = o[v];
+                    this.writeUint16(arr.length);
+                    this["write" + t.substr(0, t.length - 1) + "Array"](arr);
+                } else {
+                    this["write" + t](o[v]);
+                }
+            } else {
+                this.write(t, o[v]);
+            }
+        }
+        return this;
     }
 
     /**
@@ -1653,6 +1733,8 @@ export default class DataStream {
      * @param {Object} struct The struct data object.
      * @param needConvertStructDef if set (== true) then structDefinition will be convert using
      *        `DataStream.defWriteStruct` before writing.
+     *
+     * @deprecated use DataStream.read/write(TypeDef) instead of readStruct/writeStruct
      */
     writeStruct(
         structDefinition: StructWrite[] | StructRead[],

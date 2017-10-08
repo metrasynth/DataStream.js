@@ -1,4 +1,4 @@
-import DataStream, {TypedArray} from "../DataStream";
+import DataStream, {TypedArray, TypeDef} from "../DataStream";
 import {expect, assert} from "chai";
 import "mocha";
 
@@ -19,6 +19,40 @@ const TypedArrays = {
 
 // tslint:disable:no-shadowed-variable
 describe("DataStream", () => {
+    it("read/write", () => {
+        // prettier-ignore
+        const def: TypeDef = [
+            ["obj", [
+                ["num", "Int8"],
+                ["greet", "Utf8WithLen"],
+                ["a1", "Int16*"]]
+            ],
+            ["a2", "Uint16*"],
+            ["a3", "Int8*"],
+            ["a4", "Float64*"]
+        ];
+        // prettier-ignore
+        const o = {
+            obj: {
+                num: 5,
+                greet: "Xin chào",
+                a1: [-3, 0, 4, 9, 0x7FFF],
+            },
+            a2: [3, 0, 4, 9, 0xFFFF],
+            a3: [-3, 0, 4, 9, 0x7F],
+            a4: [-3, 0, 4, 9, 0xFFFFFFF + .321]
+        };
+        const d = new DataStream();
+        d.write(def, o);
+        d.seek(0);
+        const o2: any = d.read(def);
+        assert.equal(o2.obj.num, o.obj.num);
+        assert.equal(o2.obj.greet, o.obj.greet);
+        sameMembers(o2.obj.a1, o.obj.a1);
+        sameMembers(o2.a2, o.a2);
+        sameMembers(o2.a3, o.a3);
+        sameMembers(o2.a4, o.a4);
+    });
     it("chained read/write utf8WithLen", () => {
         const d = new DataStream();
         const greet = "Xin chào";
