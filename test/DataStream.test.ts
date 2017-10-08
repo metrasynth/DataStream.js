@@ -19,6 +19,21 @@ const TypedArrays = {
 
 // tslint:disable:no-shadowed-variable
 describe("DataStream", () => {
+    it("chained read/write utf8WithLen", () => {
+        const d = new DataStream();
+        const greet = "Xin chào";
+        d.writeInt8(3).writeUtf8WithLen(greet);
+        const d2 = new DataStream(d.buffer);
+        // prettier-ignore
+        const o = d2.readStruct([
+            "num", "int8",
+            "len", "uint16",
+            "greet", "string,utf-8:len"
+        ]);
+        assert.deepEqual(o, {num: 3, len: 9, greet});
+        d.seek(1);
+        expect(d.readUtf8WithLen()).equal(greet);
+    });
     const testType = (ds, t, elen) => {
         let i = 0;
         const boff = ds.byteOffset;

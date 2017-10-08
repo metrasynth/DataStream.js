@@ -1348,9 +1348,13 @@ export default class DataStream {
     /** writeUint16(utf8 length of `s`) then write utf8 `s` */
     writeUtf8WithLen(s: string): DataStream {
         const arr = new TextEncoder("utf-8").encode(s);
-        this.writeUint16(arr.length);
-        this.writeUint8Array(arr);
-        return this;
+        return this.writeUint16(arr.length).writeUint8Array(arr);
+    }
+
+    /** readUint16 into `len` then read `len` Uint8 then parse into the result utf8 string */
+    readUtf8WithLen(): string {
+        const len = this.readUint16();
+        return new TextDecoder("utf-8").decode(this.mapUint8Array(len));
     }
 
     /**
