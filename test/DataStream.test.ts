@@ -44,15 +44,34 @@ describe("DataStream", () => {
         };
         const d = new DataStream();
         d.write(def, o);
-        d.seek(0);
-        const o2: any = d.read(def);
-        assert.equal(o2.obj.num, o.obj.num);
-        assert.equal(o2.obj.greet, o.obj.greet);
-        sameMembers(o2.obj.a1, o.obj.a1);
-        sameMembers(o2.a2, o.a2);
-        sameMembers(o2.a3, o.a3);
-        sameMembers(o2.a4, o.a4);
+        let pos = 0;
+        const testResult = () => {
+            d.seek(pos);
+            const o2: any = d.read(def);
+            assert.equal(o2.obj.num, o.obj.num);
+            assert.equal(o2.obj.greet, o.obj.greet);
+            sameMembers(o2.obj.a1, o.obj.a1);
+            sameMembers(o2.a2, o.a2);
+            sameMembers(o2.a3, o.a3);
+            sameMembers(o2.a4, o.a4);
+        };
+        testResult();
+        pos = d.position;
+        // prettier-ignore
+        d.writeArray([
+            ["Int8", "Utf8WithLen", "Int16*"],
+            "Uint16*",
+            "Int8*",
+            "Float64*"
+        ], [
+            [5,  "Xin chào", [-3, 0, 4, 9, 0x7FFF]],
+            [3, 0, 4, 9, 0xFFFF],
+            [-3, 0, 4, 9, 0x7F],
+            [-3, 0, 4, 9, 0xFFFFFFF + .321]
+        ]);
+        testResult();
     });
+
     it("chained read/write utf8WithLen", () => {
         const d = new DataStream();
         const greet = "Xin chào";

@@ -58,6 +58,9 @@ export type Type =
     "Int8*" | "Int16*" | "Int32*" | "Uint8*" | "Uint16*" | "Uint32*" | "Float32*" | "Float64*" |
     "Utf8WithLen";
 
+// tslint:disable-next-line no-empty-interface
+export interface TypeArr extends Array<Type | TypeArr> {}
+
 /** [0] is object field's name to read from or write into.
  *  [1] is its type definition
  *  examples:
@@ -1288,7 +1291,24 @@ export default class DataStream {
         return struct;
     }
 
-    /** see test/DataStream.test.ts for usage */
+    /** ex:
+     * const def = [
+     *      ["obj", [["num", "Int8"],
+     *               ["greet", "Utf8WithLen"],
+     *               ["a1", "Int16*"]]
+     *      ],
+     *      ["a2", "Uint16*"]
+     *  ];
+     *  const o = {obj: {
+     *          num: 5,
+     *          greet: "Xin chào",
+     *          a1: [-3, 0, 4, 9, 0x7FFF],
+     *      },
+     *      a2: [3, 0, 4, 9, 0xFFFF]
+     *  });
+     *  ds.write(def, o);
+     *  expect: new DataStream(ds.buffer).read(def) deepEqual o
+     */
     read(def: TypeDef): object {
         const o = {};
         let d: TypeDef1;
@@ -1311,7 +1331,24 @@ export default class DataStream {
         return o;
     }
 
-    /** see test/DataStream.test.ts for usage */
+    /** ex:
+     * const def = [
+     *      ["obj", [["num", "Int8"],
+     *               ["greet", "Utf8WithLen"],
+     *               ["a1", "Int16*"]]
+     *      ],
+     *      ["a2", "Uint16*"]
+     *  ];
+     *  const o = {obj: {
+     *          num: 5,
+     *          greet: "Xin chào",
+     *          a1: [-3, 0, 4, 9, 0x7FFF],
+     *      },
+     *      a2: [3, 0, 4, 9, 0xFFFF]
+     *  });
+     *  ds.write(def, o);
+     *  expect: new DataStream(ds.buffer).read(def) deepEqual o
+     */
     write(def: TypeDef, o: object): DataStream {
         let d: TypeDef1;
         for (d of def) {
@@ -1327,6 +1364,37 @@ export default class DataStream {
                 }
             } else {
                 this.write(t, o[v]);
+            }
+        }
+        return this;
+    }
+
+    /** convenient method to write data. ex, instead of write data as in jsdoc of `write` method, we can:
+     * const def = [
+     *      ["Int8", "Utf8WithLen", "Int16*"],
+     *      "Uint16*"
+     *  ];
+     *  const a = [
+     *      [5, "Xin chào", [-3, 0, 4, 9, 0x7FFF]],
+     *      [3, 0, 4, 9, 0xFFFF]
+     *  ];
+     *  ds.writeArray(def, a)
+     */
+    writeArray(def: TypeArr, a: any[]): DataStream {
+        let t: Type | TypeArr;
+        let i: number;
+        for (i = 0; i < def.length; i++) {
+            t = def[i];
+            if (typeof t === "string") {
+                if (t.endsWith("*")) {
+                    const arr: TypedArray | number[] = a[i];
+                    this.writeUint16(arr.length);
+                    this["write" + t.substr(0, t.length - 1) + "Array"](arr);
+                } else {
+                    this["write" + t](a[i]);
+                }
+            } else {
+                this.writeArray(t, a[i]);
             }
         }
         return this;
