@@ -1,4 +1,4 @@
-import DataStream, {TypedArray} from "../DataStream";
+import DataStream, {TypedArray, TypeDef} from "../DataStream";
 import {expect, assert} from "chai";
 import "mocha";
 
@@ -17,11 +17,80 @@ const TypedArrays = {
     Float64Array
 };
 
+// tslint:disable:no-shadowed-variable
 describe("DataStream", () => {
-    var testType = (ds, t, elen) => {
-        var i = 0;
-        var boff = ds.byteOffset;
-        var blen = ds.byteLength;
+    it("read/write", () => {
+        // prettier-ignore
+        const def: TypeDef = [
+            ["obj", [
+                ["num", "Int8"],
+                ["greet", "Utf8WithLen"],
+                ["a1", "Int16*"]]
+            ],
+            ["a2", "Uint16*"],
+            ["a3", "Int8*"],
+            ["a4", "Float64*"]
+        ];
+        // prettier-ignore
+        const o = {
+            obj: {
+                num: 5,
+                greet: "Xin chào",
+                a1: [-3, 0, 4, 9, 0x7FFF],
+            },
+            a2: [3, 0, 4, 9, 0xFFFF],
+            a3: [-3, 0, 4, 9, 0x7F],
+            a4: [-3, 0, 4, 9, 0xFFFFFFF + .321]
+        };
+        const d = new DataStream();
+        d.write(def, o);
+        let pos = 0;
+        const testResult = () => {
+            d.seek(pos);
+            const o2: any = d.read(def);
+            assert.equal(o2.obj.num, o.obj.num);
+            assert.equal(o2.obj.greet, o.obj.greet);
+            sameMembers(o2.obj.a1, o.obj.a1);
+            sameMembers(o2.a2, o.a2);
+            sameMembers(o2.a3, o.a3);
+            sameMembers(o2.a4, o.a4);
+        };
+        testResult();
+        pos = d.position;
+        // prettier-ignore
+        d.writeArray([
+            ["Int8", "Utf8WithLen", "Int16*"],
+            "Uint16*",
+            "Int8*",
+            "Float64*"
+        ], [
+            [5,  "Xin chào", [-3, 0, 4, 9, 0x7FFF]],
+            [3, 0, 4, 9, 0xFFFF],
+            [-3, 0, 4, 9, 0x7F],
+            [-3, 0, 4, 9, 0xFFFFFFF + .321]
+        ]);
+        testResult();
+    });
+
+    it("chained read/write utf8WithLen", () => {
+        const d = new DataStream();
+        const greet = "Xin chào";
+        d.writeInt8(3).writeUtf8WithLen(greet);
+        const d2 = new DataStream(d.buffer);
+        // prettier-ignore
+        const o = d2.readStruct([
+            "num", "int8",
+            "len", "uint16",
+            "greet", "string,utf-8:len"
+        ]);
+        assert.deepEqual(o, {num: 3, len: 9, greet});
+        d.seek(1);
+        expect(d.readUtf8WithLen()).equal(greet);
+    });
+    const testType = (ds, t, elen) => {
+        let i = 0;
+        const boff = ds.byteOffset;
+        const blen = ds.byteLength;
         ds.dynamicSize = true;
         ds.endianness = DataStream.LITTLE_ENDIAN;
         ds.seek(0);
@@ -59,26 +128,22 @@ describe("DataStream", () => {
         assert.equal(ds.position, elen * i);
         assert.equal(ds.byteLength, blen);
         assert.equal(ds.buffer.byteLength, ds.byteLength + boff);
-        assert.throws(function() {
-            ds["read" + t]();
-        });
+        assert.throws(() => ds["read" + t]());
         ds.dynamicSize = false;
-        assert.throws(function() {
-            ds["write" + t](125);
-        });
+        assert.throws(() => ds["write" + t](125));
         testTypeArray(ds, t, elen);
     };
 
-    var testSubArray = (typedArrayConstructor, t, arr) => {
-        var typedArr = new typedArrayConstructor(arr);
-        var ds = new DataStream();
+    const testSubArray = (typedArrayConstructor, t, arr) => {
+        const typedArr = new typedArrayConstructor(arr);
+        const ds = new DataStream();
         ds["write" + t + "Array"](typedArr.subarray(1));
         ds.seek(0);
-        var outSubArray = ds["read" + t + "Array"](arr.length - 1);
+        const outSubArray = ds["read" + t + "Array"](arr.length - 1);
         expect(typedArr.subarray(1)).to.deep.equal(outSubArray);
     };
 
-    var testDS = (i, ds, boff, blen, t, elen, arr) => {
+    const testDS = (i, ds, boff, blen, t, elen, arr) => {
         ds.dynamicSize = true;
         ds.endianness = DataStream.LITTLE_ENDIAN;
 
@@ -88,10 +153,10 @@ describe("DataStream", () => {
         assert.equal(ds.byteLength, blen);
         assert.equal(ds.buffer.byteLength, ds.byteLength + boff);
         ds.seek(0);
-        var rarr = ds["read" + t + "Array"](arr.length);
+        let rarr = ds["read" + t + "Array"](arr.length);
         testSubArray(rarr.constructor, t, arr);
         ds.seek(0);
-        var rarr2 = [];
+        const rarr2 = [];
         for (i = 0; i < arr.length; i++) {
             rarr2.push(ds["read" + t]());
         }
@@ -104,14 +169,14 @@ describe("DataStream", () => {
         assert.equal(ds.buffer.byteLength, ds.byteLength + boff);
 
         ds.seek(0);
-        for (let a of arr) {
+        for (const a of arr) {
             ds["write" + t](a);
         }
         assert.equal(ds.position, elen * i);
         assert.equal(ds.byteLength, blen);
         assert.equal(ds.buffer.byteLength, ds.byteLength + boff);
         ds.seek(0);
-        var rarr = ds["read" + t + "Array"](arr.length);
+        rarr = ds["read" + t + "Array"](arr.length);
         for (i = 0; i < Math.floor(ds.byteLength / elen); i++) {
             assert.equal(rarr[i], arr[i]);
         }
@@ -125,20 +190,20 @@ describe("DataStream", () => {
         assert.equal(ds.byteOffset % rarr.BYTES_PER_ELEMENT, 0);
 
         ds.seek(0);
-        var rarr = ds["map" + t + "Array"](arr.length);
+        rarr = ds["map" + t + "Array"](arr.length);
         ds.seek(0);
         for (i = 0; i < Math.floor(ds.byteLength / elen); i++) {
             assert.equal(rarr[i], arr[i]);
             rarr[i] = 127;
         }
         ds.seek(0);
-        var warr = ds["read" + t + "Array"](arr.length);
+        let warr = ds["read" + t + "Array"](arr.length);
         for (i = 0; i < Math.floor(ds.byteLength / elen); i++) {
             assert.equal(warr[i], 127);
         }
         ds.endianness = DataStream.BIG_ENDIAN;
         ds.seek(0);
-        var rarr = ds["map" + t + "Array"](arr.length);
+        rarr = ds["map" + t + "Array"](arr.length);
         ds.seek(0);
         for (i = 0; i < Math.floor(ds.byteLength / elen); i++) {
             assert.notEqual(rarr[i], arr[i]);
@@ -146,7 +211,7 @@ describe("DataStream", () => {
         }
         ds.seek(0);
         if (elen > 1) {
-            var warr = ds["read" + t + "Array"](arr.length);
+            warr = ds["read" + t + "Array"](arr.length);
             for (i = 0; i < Math.floor(ds.byteLength / elen); i++) {
                 assert.notEqual(warr[i], 127);
             }
@@ -154,7 +219,7 @@ describe("DataStream", () => {
         ds.seek(0);
         ds["map" + t + "Array"](arr.length);
         ds.seek(0);
-        var warr = ds["read" + t + "Array"](arr.length);
+        warr = ds["read" + t + "Array"](arr.length);
         for (i = 0; i < Math.floor(ds.byteLength / elen); i++) {
             assert.equal(warr[i], 127);
         }
@@ -163,7 +228,7 @@ describe("DataStream", () => {
         assert.equal(ds.buffer.byteLength, ds.byteLength + boff);
         ds.endianness = DataStream.BIG_ENDIAN;
         ds.seek(0);
-        var rarr = ds["read" + t + "Array"](arr.length);
+        rarr = ds["read" + t + "Array"](arr.length);
         if (elen > 1) {
             for (i = 0; i < Math.floor(ds.byteLength / elen); i++) {
                 assert.notEqual(rarr[i], arr[i]);
@@ -177,7 +242,7 @@ describe("DataStream", () => {
         assert.equal(ds.byteLength, blen);
         assert.equal(ds.buffer.byteLength, ds.byteLength + boff);
         ds.seek(0);
-        var rarr = ds["read" + t + "Array"](arr.length);
+        rarr = ds["read" + t + "Array"](arr.length);
         for (i = 0; i < Math.floor(ds.byteLength / elen); i++) {
             assert.equal(rarr[i], arr[i]);
         }
@@ -188,36 +253,30 @@ describe("DataStream", () => {
         assert.equal(ds.position, elen * i);
         assert.equal(ds.byteLength, blen);
         assert.equal(ds.buffer.byteLength, ds.byteLength + boff);
-        assert.throws(function() {
-            ds["read" + t + "Array"](1);
-        });
+        assert.throws(() => ds["read" + t + "Array"](1));
         ds.dynamicSize = false;
-        assert.throws(function() {
-            ds["write" + t + "Array"]([125]);
-        });
-        var ds2 = new DataStream();
+        assert.throws(() => ds["write" + t + "Array"]([125]));
+        const ds2 = new DataStream();
         ds2["write" + t + "Array"](arr);
         ds2.seek(0);
-        var rarr = ds2["read" + t + "Array"](arr.length);
+        rarr = ds2["read" + t + "Array"](arr.length);
         for (i = 0; i < ds2.byteLength / elen; i++) {
             assert.equal(rarr[i], arr[i]);
         }
-        ds2.buffer;
-        assert.throws(function() {
-            ds2["read" + t + "Array"](1);
-        });
+        ds2.buffer; // tslint:disable-line no-unused-expression
+        assert.throws(() => ds2["read" + t + "Array"](1));
     };
 
-    var testTypeArray = (ds, t, elen) => {
-        var i = 0;
-        var boff = ds.byteOffset;
-        var blen = ds.byteLength;
-        var arr: any = [];
-        for (i = 0; i < Math.floor(ds.byteLength / elen); i++) {
+    const testTypeArray = (ds, t, elen) => {
+        const boff = ds.byteOffset;
+        const blen = ds.byteLength;
+        let arr: any = [];
+        let i = 0;
+        for (; i < Math.floor(ds.byteLength / elen); i++) {
             arr.push((125 + i) % 127);
         }
         testDS(i, ds, boff, blen, t, elen, arr);
-        var arr = new TypedArrays[t + "Array"](ds.byteLength / elen);
+        arr = new TypedArrays[t + "Array"](ds.byteLength / elen);
         for (i = 0; i < arr.length; i++) {
             arr[i] = (125 + i) % 127;
         }
@@ -225,11 +284,11 @@ describe("DataStream", () => {
     };
 
     it("constructor", () => {
-        var buf = new ArrayBuffer(100);
-        var ds = new DataStream(buf);
+        const buf = new ArrayBuffer(100);
+        let ds = new DataStream(buf);
         assert.equal(ds.byteLength, buf.byteLength);
         assert.equal(ds.endianness, DataStream.LITTLE_ENDIAN);
-        for (var i = 0; i < 100; i++) {
+        for (let i = 0; i < 100; i++) {
             ds = new DataStream(buf, i);
             ds = new DataStream(buf, i, DataStream.BIG_ENDIAN);
             ds = new DataStream(buf, i, DataStream.LITTLE_ENDIAN);
@@ -244,42 +303,42 @@ describe("DataStream", () => {
         ds = new DataStream(buf, null, DataStream.LITTLE_ENDIAN);
         assert.equal(ds.endianness, DataStream.LITTLE_ENDIAN);
         assert.equal(ds.byteLength, buf.byteLength);
-        var dv: any = new DataView(buf);
+        let dv: any = new DataView(buf);
         ds = new DataStream(dv, 0, DataStream.BIG_ENDIAN);
         assert.equal(ds.endianness, DataStream.BIG_ENDIAN);
         assert.equal(ds.byteLength, buf.byteLength);
         assert.equal(ds.byteOffset, dv.byteOffset);
-        for (var i = 0; i < 100; i++) {
+        for (let i = 0; i < 100; i++) {
             dv = new DataView(buf, i);
             ds = new DataStream(dv);
             assert.equal(ds.byteLength, buf.byteLength - i);
             assert.equal(ds.byteOffset, dv.byteOffset);
         }
-        for (var i = 0; i < 50; i++) {
+        for (let i = 0; i < 50; i++) {
             dv = new DataView(buf, 50);
             ds = new DataStream(dv, i);
             assert.equal(ds.byteLength, buf.byteLength - i - dv.byteOffset);
             assert.equal(ds.byteOffset, dv.byteOffset + i);
         }
-        for (var i = 0; i < 100; i++) {
+        for (let i = 0; i < 100; i++) {
             dv = new Uint8Array(buf, i);
             ds = new DataStream(dv);
             assert.equal(ds.byteLength, buf.byteLength - i);
             assert.equal(ds.byteOffset, dv.byteOffset);
         }
-        for (var i = 0; i < 50; i++) {
+        for (let i = 0; i < 50; i++) {
             dv = new Uint8Array(buf, 50);
             ds = new DataStream(dv, i);
             assert.equal(ds.byteLength, buf.byteLength - i - dv.byteOffset);
             assert.equal(ds.byteOffset, dv.byteOffset + i);
         }
-        for (var i = 0; i < 25; i++) {
+        for (let i = 0; i < 25; i++) {
             dv = new Float32Array(buf, i * 4);
             ds = new DataStream(dv);
             assert.equal(ds.byteLength, buf.byteLength - i * 4);
             assert.equal(ds.byteOffset, dv.byteOffset);
         }
-        for (var i = 0; i < 12; i++) {
+        for (let i = 0; i < 12; i++) {
             dv = new Float32Array(buf, 12);
             ds = new DataStream(dv, i);
             assert.equal(ds.byteLength, buf.byteLength - i - dv.byteOffset);
@@ -288,109 +347,53 @@ describe("DataStream", () => {
     });
 
     it("Struct", () => {
-        var embed = ["tag", "uint32be", "code", "uint32le", "greet", "cstring"];
-        var def = [
-            "tag",
-            "cstring:4",
-            "code",
-            "uint32le",
-            "embed",
-            embed,
-            "length",
-            "uint16be",
-            "data",
-            ["[]", "float32be", "length"],
-            "greet",
-            "cstring:20",
-            "endNote",
-            "uint8"
+        // prettier-ignore
+        const embed = [
+            "tag", "uint32be",
+            "code", "uint32le",
+            "greet", "cstring"
+        ];
+        // prettier-ignore
+        const def = [
+            "tag", "cstring:4",
+            "code", "uint32le",
+            "embed", embed,
+            "length", "uint16be",
+            "data", ["[]", "float32be", "length"],
+            "greet", "cstring:20",
+            "endNote", "uint8"
         ];
 
-        var u = [
-            137,
-            80,
-            78,
-            71,
-            0,
-            136,
-            136,
-            254,
-            137,
-            80,
-            78,
-            71,
-            0,
-            136,
-            136,
-            255,
-            72,
-            101,
-            108,
-            108,
-            111,
-            44,
-            32,
-            87,
-            111,
-            114,
-            108,
-            100,
-            33,
-            0,
-            0,
-            2,
-            0,
-            1,
-            2,
-            3,
-            1,
-            2,
-            3,
-            4,
-            72,
-            101,
-            108,
-            108,
-            111,
-            44,
-            32,
-            87,
-            111,
-            114,
-            108,
-            100,
-            33,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            255
-        ];
+        // prettier-ignore
+        const u = [137,  80,  78,  71,   0, 136, 136, 254, 137,  80,
+            78,  71,   0, 136, 136, 255,  72, 101, 108, 108,
+            111,  44,  32,  87, 111, 114, 108, 100,  33,   0,
+            0,   2,   0,   1,   2,   3,   1,   2,   3,   4,
+            72, 101, 108, 108, 111,  44,  32,  87, 111, 114,
+            108, 100,  33,   0,   0,   0,   0,   0,   0,   0,
+            255];
 
-        var ds = new DataStream();
+        const ds = new DataStream();
         ds.writeUint8Array(u);
         ds.writeUint8Array(u);
         ds.seek(0);
-        var obj: any = ds.readStruct(def);
-        var obj2: any = ds.readStruct(def);
-        var d1 = obj.data;
-        var d2 = obj2.data;
+        const obj: any = ds.readStruct(def);
+        const obj2: any = ds.readStruct(def);
+        const d1 = obj.data;
+        const d2 = obj2.data;
         delete obj.data;
         delete obj2.data;
         assert.equal(255, obj.endNote);
         assert.equal(255, obj2.endNote);
         expect(obj).to.deep.equal(obj2);
         expect(d1).to.deep.equal(d2);
-        var p = ds.position;
+        const p = ds.position;
         obj.data = d1;
         ds.writeStruct(def, obj);
         delete obj.data;
         ds.seek(p);
-        var obj3: any = ds.readStruct(def);
-        var d3 = obj3.data;
+        const obj3: any = ds.readStruct(def);
+        const d3 = obj3.data;
         delete obj3.data;
         ds.seek(p);
         assert.equal(255, obj3.endNote);
@@ -398,22 +401,19 @@ describe("DataStream", () => {
         expect(obj).to.deep.equal(obj3);
         expect(d1).to.deep.equal(d3);
 
-        var def2 = [
-            "one",
-            "float32",
-            "two",
-            "float32be",
-            "three",
-            "float32le",
-            "four",
-            "float32"
+        // prettier-ignore
+        const def2 = [
+            "one", "float32",
+            "two", "float32be",
+            "three", "float32le",
+            "four", "float32"
         ];
-        var u2 = [1, 1, 1, 1];
-        var ds2 = new DataStream();
+        const u2 = [1, 1, 1, 1];
+        const ds2 = new DataStream();
         ds2.writeFloat32Array(u2, DataStream.LITTLE_ENDIAN);
         ds2.seek(0);
         ds2.endianness = DataStream.LITTLE_ENDIAN;
-        var o2: any = ds2.readStruct(def2);
+        let o2: any = ds2.readStruct(def2);
         assert.equal(o2.one, 1);
         assert.equal(o2.four, 1);
         assert.notEqual(o2.two, o2.three);
@@ -431,112 +431,79 @@ describe("DataStream", () => {
         assert.equal(o2.one /*BE*/, o2.two /*BE*/);
         assert.notEqual(o2.one /*BE*/, o2.three /*LE*/);
 
-        var def3 = [
-            "length",
-            "uint16be",
-            "data",
-            [
-                "[]",
-                "uint8",
-                function(s) {
-                    return s.length - 2;
-                }
-            ],
-            "endNote",
-            "uint8"
+        // prettier-ignore
+        const def3 = [
+            "length", "uint16be",
+            "data", ["[]", "uint8", s => s.length - 2],
+            "endNote", "uint8"
         ];
-        var u3 = [0, 8, 1, 2, 3, 4, 5, 6, 255];
-        var ds3 = new DataStream();
+        const u3 = [0, 8, 1, 2, 3, 4, 5, 6, 255];
+        const ds3 = new DataStream();
         ds3.writeUint8Array(u3);
         ds3.seek(0);
-        var o3: any = ds3.readStruct(def3);
+        const o3: any = ds3.readStruct(def3);
         assert.equal(o3.length, 8);
         assert.equal(o3.endNote, 255);
         sameMembers(o3.data, [1, 2, 3, 4, 5, 6]);
 
-        var def4 = [
-            "length",
-            "uint16be",
-            "data",
-            {
-                get: function(ds, s) {
-                    var o = {odd: [], even: []};
-                    for (var i = 0; i < s.length - 2; i += 2) {
+        // prettier-ignore
+        const def4 = [
+            "length", "uint16be",
+            "data", {
+                get(ds, s) {
+                    const o = {odd: [], even: []};
+                    for (let i = 0; i < s.length - 2; i += 2) {
                         o.odd.push(ds.readUint8());
                         o.even.push(ds.readUint8());
                     }
                     return o;
                 },
-                set: function(ds, v) {
-                    for (var i = 0; i < v.odd.length; i++) {
+                set(ds, v) {
+                    for (let i = 0; i < v.odd.length; i++) {
                         ds.writeUint8(v.odd[i]);
                         ds.writeUint8(v.even[i]);
                     }
                 }
             },
-            "endNote",
-            "uint8"
+            "endNote", "uint8"
         ];
-        var u4 = [0, 8, 1, 2, 3, 4, 5, 6, 255];
-        var ds4 = new DataStream(new Uint8Array(u4));
-        var o4: any = ds4.readStruct(def4);
+        const u4 = [0, 8, 1, 2, 3, 4, 5, 6, 255];
+        const ds4 = new DataStream(new Uint8Array(u4));
+        const o4: any = ds4.readStruct(def4);
         assert.equal(o4.length, 8);
         assert.equal(o4.endNote, 255);
         expect(o4.data.odd).to.deep.equal([1, 3, 5]);
         expect(o4.data.even).to.deep.equal([2, 4, 6]);
-        var pos = ds4.position;
+        const pos = ds4.position;
         ds4.writeStruct(def4, o4);
         ds4.seek(pos);
-        var o4b = ds4.readStruct(def4);
+        const o4b = ds4.readStruct(def4);
         expect(o4).to.deep.equal(o4b);
         sameMembers(new Uint8Array(ds4.buffer), u4.concat(u4));
 
         /* Test variable-length string definition */
-        var def5 = [
-            "len",
-            "uint8",
-            "greet",
-            "cstring:len",
-            "pad",
-            "string:2",
-            "len2",
-            "uint8",
-            "greet2",
-            "string:len2",
-            "tail",
-            [[], "uint8", "*"]
+        // prettier-ignore
+        const def5 = [
+            "len", "uint8",
+            "greet", "cstring:len",
+            "pad", "string:2",
+            "len2", "uint8",
+            "greet2", "string:len2",
+            "tail", [[], "uint8", "*"]
         ];
 
-        var u5 = [
-            5,
-            72,
-            101,
-            108,
-            108,
-            111, // "Hello"
-            44,
-            32, // ", "
+        // prettier-ignore
+        const u5 = [5,
+            72, 101, 108, 108, 111, // "Hello"
+            44,  32, // ", "
             6,
-            87,
-            111,
-            114,
-            108,
-            100,
-            33, // "World!"
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            255
-        ];
+            87, 111, 114, 108, 100,  33, // "World!"
+            0,   0,   0,   0,   0,   0,   0, 255];
 
-        var ds5 = new DataStream();
+        const ds5 = new DataStream();
         ds5.writeUint8Array(u5);
         ds5.seek(0);
-        var o5: any = ds5.readStruct(def5);
+        const o5: any = ds5.readStruct(def5);
         assert.equal(o5.len, o5.greet.length);
         assert.equal("Hello", o5.greet);
         assert.equal(", ", o5.pad);
@@ -544,44 +511,18 @@ describe("DataStream", () => {
         assert.equal("World!", o5.greet2);
         sameMembers(o5.tail, [0, 0, 0, 0, 0, 0, 0, 255]);
 
-        var def6 = ["len", "uint8", "greet", "string,utf-8:len"];
-        var greet = "xin chào đỗữẫẨở";
+        const def6 = ["len", "uint8", "greet", "string,utf-8:len"];
+        const greet = "xin chào đỗữẫẨở";
         // var greetData = new TextEncoder('utf-8').encode(greet);
         // console.log(greetData, greetData.length, greet.length);
-        var u6 = [
-            27,
-            120,
-            105,
-            110,
-            32,
-            99,
-            104,
-            195,
-            160,
-            111,
-            32,
-            196,
-            145,
-            225,
-            187,
-            151,
-            225,
-            187,
-            175,
-            225,
-            186,
-            171,
-            225,
-            186,
-            168,
-            225,
-            187,
-            159
+        // prettier-ignore
+        const u6 = [27,
+            120, 105, 110, 32, 99, 104, 195, 160, 111, 32, 196, 145, 225, 187, 151, 225, 187, 175, 225, 186, 171, 225, 186, 168, 225, 187, 159
         ];
-        var ds6 = new DataStream();
+        const ds6 = new DataStream();
         ds6.writeUint8Array(u6);
         ds6.seek(0);
-        var o6: any = ds6.readStruct(def6);
+        const o6: any = ds6.readStruct(def6);
         assert.equal(greet, o6.greet);
 
         const ds6b = new DataStream();
@@ -590,7 +531,7 @@ describe("DataStream", () => {
         const ds6c = new DataStream();
 
         // struct to write don't have 'len' field
-        ds6c.writeStruct(def6, {greet: greet}, true);
+        ds6c.writeStruct(def6, {greet}, true);
 
         ds6b.seek(0);
         const o6b = ds6b.readStruct(def6);
@@ -611,7 +552,7 @@ describe("DataStream", () => {
         );
     });
 
-    var buf = new ArrayBuffer(1064);
+    const buf = new ArrayBuffer(1064);
     let ds: DataStream;
     it("common test", () => {
         ds = new DataStream(buf, 64);
@@ -619,19 +560,19 @@ describe("DataStream", () => {
         ds.endianness = DataStream.LITTLE_ENDIAN;
         ds.writeUint16(1);
         ds.seek(0);
-        var a = ds.readUint8Array(2);
+        let a = ds.readUint8Array(2);
         assert.equal(a[0], 1);
         assert.equal(a[1], 0);
         ds.seek(0);
         ds.endianness = DataStream.BIG_ENDIAN;
         ds.writeUint16(1);
         ds.seek(0);
-        var a = ds.readUint8Array(2);
+        a = ds.readUint8Array(2);
         assert.equal(a[0], 0);
         assert.equal(a[1], 1);
         ds.seek(0);
         ds.endianness = DataStream.LITTLE_ENDIAN;
-        for (var i = 0; i < 1000 / 8; i++) {
+        for (let i = 0; i < 1000 / 8; i++) {
             ds.writeFloat64(0.125);
         }
         assert.equal(ds.position + 64, buf.byteLength);
@@ -639,22 +580,20 @@ describe("DataStream", () => {
         assert.equal(ds.buffer.byteLength, buf.byteLength);
 
         ds.seek(0);
-        for (var i = 0; i < 1000 / 8; i++) {
+        for (let i = 0; i < 1000 / 8; i++) {
             assert.equal(0.125, ds.readFloat64());
         }
         assert.equal(ds.position + 64, buf.byteLength);
 
-        assert.throws(function() {
-            ds.readFloat32();
-        });
+        assert.throws(() => ds.readFloat32());
 
         ds.seek(0);
         ds.endianness = DataStream.BIG_ENDIAN;
-        for (var i = 0; i < 1000 / 8; i++) {
+        for (let i = 0; i < 1000 / 8; i++) {
             assert.notEqual(0.125, ds.readFloat64());
         }
         ds.seek(0);
-        for (var i = 0; i < 999; i++) {
+        for (let i = 0; i < 999; i++) {
             ds.writeFloat32(0.125);
         }
         // reading beyond extended buffer succeeds for performance reasons
@@ -664,12 +603,10 @@ describe("DataStream", () => {
         assert.equal(ds.buffer.byteLength, 3996 + 64);
         ds.position = 3996;
         // but fails after getting buffer due to _trimAlloc
-        assert.throws(function() {
-            ds.readFloat32();
-        });
+        assert.throws(() => ds.readFloat32());
 
         ds.seek(0);
-        for (var i = 0; i < 999; i++) {
+        for (let i = 0; i < 999; i++) {
             assert.equal(0.125, ds.readFloat32());
         }
         assert.equal(ds.position + 64, ds.buffer.byteLength);
@@ -677,9 +614,7 @@ describe("DataStream", () => {
         ds.writeFloat32(0.125);
 
         ds.dynamicSize = false;
-        assert.throws(function() {
-            ds.writeFloat32(0.125);
-        });
+        assert.throws(() => ds.writeFloat32(0.125));
 
         assert.equal(ds.position, 4000);
         assert.equal(ds.byteLength, 4000);
@@ -707,44 +642,44 @@ describe("DataStream", () => {
     it("testType Float64 - second run", () => testType(ds, "Float64", 8));
 
     it("other", () => {
-        var s = "Hello, 世界";
-        var dss = new DataStream();
+        let s = "Hello, 世界";
+        let dss = new DataStream();
         dss.writeUCS2String(s);
         dss.seek(0);
         assert.equal(s, dss.readUCS2String(s.length));
 
-        var s = "Exif\\000\\000";
-        var dss = new DataStream();
+        s = "Exif\\000\\000";
+        dss = new DataStream();
         dss.writeString(s);
         dss.seek(0);
         assert.equal(s, dss.readString(s.length));
 
-        var dss = new DataStream();
-        var s = "Hello, World!";
+        dss = new DataStream();
+        s = "Hello, World!";
         dss.writeCString(s);
         assert.equal(dss.byteLength, s.length + 1);
         dss.seek(0);
         assert.equal(s, dss.readCString());
-        var dp = dss.position;
+        const dp = dss.position;
         dss.writeCString(s, s.length); // no zero terminate
         dss.seek(dp);
         assert.equal(s, dss.readCString());
         dss.writeCString(s, s.length); // no zero terminate
         dss.seek(dp);
         assert.equal(s, dss.readCString(s.length));
-        dss.buffer;
+        dss.buffer; // tslint:disable-line no-unused-expression
         assert.equal(s, dss.readCString());
 
-        var dss = new DataStream();
-        var s = "Hello, 世界";
+        dss = new DataStream();
+        s = "Hello, 世界";
         dss.writeString(s, "UTF-8");
-        var bl = dss.byteLength;
+        const bl = dss.byteLength;
         dss.seek(0);
         assert.equal(s, dss.readString(dss.byteLength, "UTF-8"));
         // ugh, byte-counted UTF-8 strings :(
 
-        var dss = new DataStream();
-        var s = "Hello, me";
+        dss = new DataStream();
+        s = "Hello, me";
         dss.writeString(s, "UTF-8");
         assert.notEqual(bl, dss.byteLength);
         dss.seek(0);

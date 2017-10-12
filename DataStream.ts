@@ -11,10 +11,14 @@ export type TypedArray =
     | Float32Array
     | Float64Array;
 
+/** @deprecated use DataStream.read/write(TypeDef) instead of readStruct/writeStruct */
 export type StructReadFn = (ds: DataStream, struct: object) => any;
 
+/** @deprecated use DataStream.read/write(TypeDef) instead of readStruct/writeStruct */
 export type LenFn = (struct: object, ds: DataStream, def: StructRead) => any;
+
 // https://github.com/Microsoft/TypeScript/issues/3496#issuecomment-128553540
+/** @deprecated use DataStream.read/write(TypeDef) instead of readStruct/writeStruct */
 export type StructRead =
     | string
     | StructReadFn
@@ -22,22 +26,55 @@ export type StructRead =
     | ["[]", string, string | LenFn]
     | StructReadArray;
 
+/** @deprecated use DataStream.read/write(TypeDef) instead of readStruct/writeStruct */
 // tslint:disable-next-line no-empty-interface
 export interface StructReadArray extends Array<StructRead> {}
 
+/** @deprecated use DataStream.read/write(TypeDef) instead of readStruct/writeStruct */
 export type StructWriteFn = (
     ds: DataStream,
     field: string,
     struct: object
 ) => void;
+
+/** @deprecated use DataStream.read/write(TypeDef) instead of readStruct/writeStruct */
 export type StructWrite =
     | string
     | StructWriteFn
     | {set: StructWriteFn}
     | StructWriteArray;
 
+/** @deprecated use DataStream.read/write(TypeDef) instead of readStruct/writeStruct */
 // tslint:disable-next-line no-empty-interface
 export interface StructWriteArray extends Array<StructWrite> {}
+
+/**
+ * Type endsWith '*' mean array.
+ * Type endsWith '+' mean array | utf8 string with length encoded as Uint16 & write/read before the actual array | utf8 string.
+ */
+// prettier-ignore
+export type Type =
+    "Int8" | "Int16" | "Int32" | "Uint8" | "Uint16" | "Uint32" | "Float32" | "Float64" |
+    "Int8*" | "Int16*" | "Int32*" | "Uint8*" | "Uint16*" | "Uint32*" | "Float32*" | "Float64*" |
+    "Utf8WithLen";
+
+// tslint:disable-next-line no-empty-interface
+export interface TypeArr extends Array<Type | TypeArr> {}
+
+/** [0] is object field's name to read from or write into.
+ *  [1] is its type definition
+ *  examples:
+ *  ["num", "Int16"]
+ *  ["greet", "Utf8+"]
+ *  ["obj", [
+ *      ["num", "Int8"],
+ *      ["len", "Uint16"],
+ *      ["greet", "Utf8"]]
+ *  ]
+ */
+export type TypeDef1 = [string, Type | TypeDef];
+// tslint:disable-next-line no-empty-interface
+export interface TypeDef extends Array<TypeDef1> {}
 
 /**
  * DataStream reads scalars, arrays and structs of data from an ArrayBuffer.
@@ -593,7 +630,7 @@ export default class DataStream {
      * @param {Object} arr The array to write.
      * @param {?boolean} e Endianness of the data to write.
      */
-    writeInt32Array(arr: Int32Array | number[], e?: boolean): void {
+    writeInt32Array(arr: Int32Array | number[], e?: boolean): DataStream {
         this._realloc(arr.length * 4);
         if (
             arr instanceof Int32Array &&
@@ -613,6 +650,7 @@ export default class DataStream {
                 this.writeInt32(arr[i], e);
             }
         }
+        return this;
     }
 
     /**
@@ -621,7 +659,7 @@ export default class DataStream {
      * @param {Object} arr The array to write.
      * @param {?boolean} e Endianness of the data to write.
      */
-    writeInt16Array(arr: Int16Array | number[], e?: boolean): void {
+    writeInt16Array(arr: Int16Array | number[], e?: boolean): DataStream {
         this._realloc(arr.length * 2);
         if (
             arr instanceof Int16Array &&
@@ -641,6 +679,7 @@ export default class DataStream {
                 this.writeInt16(arr[i], e);
             }
         }
+        return this;
     }
 
     /**
@@ -648,7 +687,7 @@ export default class DataStream {
      *
      * @param {Object} arr The array to write.
      */
-    writeInt8Array(arr: Int8Array | number[]): void {
+    writeInt8Array(arr: Int8Array | number[]): DataStream {
         this._realloc(arr.length);
         if (
             arr instanceof Int8Array &&
@@ -668,6 +707,7 @@ export default class DataStream {
                 this.writeInt8(arr[i]);
             }
         }
+        return this;
     }
 
     /**
@@ -676,7 +716,7 @@ export default class DataStream {
      * @param {Object} arr The array to write.
      * @param {?boolean} e Endianness of the data to write.
      */
-    writeUint32Array(arr: Uint32Array | number[], e?: boolean): void {
+    writeUint32Array(arr: Uint32Array | number[], e?: boolean): DataStream {
         this._realloc(arr.length * 4);
         if (
             arr instanceof Uint32Array &&
@@ -696,6 +736,7 @@ export default class DataStream {
                 this.writeUint32(arr[i], e);
             }
         }
+        return this;
     }
 
     /**
@@ -704,7 +745,7 @@ export default class DataStream {
      * @param {Object} arr The array to write.
      * @param {?boolean} e Endianness of the data to write.
      */
-    writeUint16Array(arr: Uint16Array | number[], e?: boolean): void {
+    writeUint16Array(arr: Uint16Array | number[], e?: boolean): DataStream {
         this._realloc(arr.length * 2);
         if (
             arr instanceof Uint16Array &&
@@ -724,6 +765,7 @@ export default class DataStream {
                 this.writeUint16(arr[i], e);
             }
         }
+        return this;
     }
 
     /**
@@ -731,7 +773,7 @@ export default class DataStream {
      *
      * @param {Object} arr The array to write.
      */
-    writeUint8Array(arr: Uint8Array | number[]): void {
+    writeUint8Array(arr: Uint8Array | number[]): DataStream {
         this._realloc(arr.length);
         if (
             arr instanceof Uint8Array &&
@@ -751,6 +793,7 @@ export default class DataStream {
                 this.writeUint8(arr[i]);
             }
         }
+        return this;
     }
 
     /**
@@ -759,7 +802,7 @@ export default class DataStream {
      * @param {Object} arr The array to write.
      * @param {?boolean} e Endianness of the data to write.
      */
-    writeFloat64Array(arr: Float64Array | number[], e?: boolean): void {
+    writeFloat64Array(arr: Float64Array | number[], e?: boolean): DataStream {
         this._realloc(arr.length * 8);
         if (
             arr instanceof Float64Array &&
@@ -779,6 +822,7 @@ export default class DataStream {
                 this.writeFloat64(arr[i], e);
             }
         }
+        return this;
     }
 
     /**
@@ -787,7 +831,7 @@ export default class DataStream {
      * @param {Object} arr The array to write.
      * @param {?boolean} e Endianness of the data to write.
      */
-    writeFloat32Array(arr: Float32Array | number[], e?: boolean): void {
+    writeFloat32Array(arr: Float32Array | number[], e?: boolean): DataStream {
         this._realloc(arr.length * 4);
         if (
             arr instanceof Float32Array &&
@@ -807,6 +851,7 @@ export default class DataStream {
                 this.writeFloat32(arr[i], e);
             }
         }
+        return this;
     }
 
     /**
@@ -927,7 +972,7 @@ export default class DataStream {
      * @param {number} v Number to write.
      * @param {?boolean} e Endianness of the number.
      */
-    writeInt32(v: number, e?: boolean): void {
+    writeInt32(v: number, e?: boolean): DataStream {
         this._realloc(4);
         this._dataView.setInt32(
             this.position,
@@ -935,6 +980,7 @@ export default class DataStream {
             e == null ? this.endianness : e
         );
         this.position += 4;
+        return this;
     }
 
     /**
@@ -943,7 +989,7 @@ export default class DataStream {
      * @param {number} v Number to write.
      * @param {?boolean} e Endianness of the number.
      */
-    writeInt16(v: number, e?: boolean): void {
+    writeInt16(v: number, e?: boolean): DataStream {
         this._realloc(2);
         this._dataView.setInt16(
             this.position,
@@ -951,6 +997,7 @@ export default class DataStream {
             e == null ? this.endianness : e
         );
         this.position += 2;
+        return this;
     }
 
     /**
@@ -958,10 +1005,11 @@ export default class DataStream {
      *
      * @param {number} v Number to write.
      */
-    writeInt8(v: number): void {
+    writeInt8(v: number): DataStream {
         this._realloc(1);
         this._dataView.setInt8(this.position, v);
         this.position += 1;
+        return this;
     }
 
     /**
@@ -970,7 +1018,7 @@ export default class DataStream {
      * @param {number} v Number to write.
      * @param {?boolean} e Endianness of the number.
      */
-    writeUint32(v: number, e?: boolean): void {
+    writeUint32(v: number, e?: boolean): DataStream {
         this._realloc(4);
         this._dataView.setUint32(
             this.position,
@@ -978,6 +1026,7 @@ export default class DataStream {
             e == null ? this.endianness : e
         );
         this.position += 4;
+        return this;
     }
 
     /**
@@ -986,7 +1035,7 @@ export default class DataStream {
      * @param {number} v Number to write.
      * @param {?boolean} e Endianness of the number.
      */
-    writeUint16(v: number, e?: boolean): void {
+    writeUint16(v: number, e?: boolean): DataStream {
         this._realloc(2);
         this._dataView.setUint16(
             this.position,
@@ -994,6 +1043,7 @@ export default class DataStream {
             e == null ? this.endianness : e
         );
         this.position += 2;
+        return this;
     }
 
     /**
@@ -1001,10 +1051,11 @@ export default class DataStream {
      *
      * @param {number} v Number to write.
      */
-    writeUint8(v: number): void {
+    writeUint8(v: number): DataStream {
         this._realloc(1);
         this._dataView.setUint8(this.position, v);
         this.position += 1;
+        return this;
     }
 
     /**
@@ -1013,7 +1064,7 @@ export default class DataStream {
      * @param {number} v Number to write.
      * @param {?boolean} e Endianness of the number.
      */
-    writeFloat32(v: number, e?: boolean): void {
+    writeFloat32(v: number, e?: boolean): DataStream {
         this._realloc(4);
         this._dataView.setFloat32(
             this.position,
@@ -1021,6 +1072,7 @@ export default class DataStream {
             e == null ? this.endianness : e
         );
         this.position += 4;
+        return this;
     }
 
     /**
@@ -1029,7 +1081,7 @@ export default class DataStream {
      * @param {number} v Number to write.
      * @param {?boolean} e Endianness of the number.
      */
-    writeFloat64(v: number, e?: boolean): void {
+    writeFloat64(v: number, e?: boolean): DataStream {
         this._realloc(8);
         this._dataView.setFloat64(
             this.position,
@@ -1037,6 +1089,7 @@ export default class DataStream {
             e == null ? this.endianness : e
         );
         this.position += 8;
+        return this;
     }
 
     /**
@@ -1215,6 +1268,8 @@ export default class DataStream {
      *
      * @param {Object} structDefinition Struct definition object.
      * @return {Object} The read struct. Null if failed to read struct.
+     *
+     * @deprecated use DataStream.read/write(TypeDef) instead of readStruct/writeStruct
      */
     readStruct(structDefinition: StructRead[]): object {
         const struct = {};
@@ -1234,6 +1289,115 @@ export default class DataStream {
             struct[structDefinition[i] as string] = v;
         }
         return struct;
+    }
+
+    /** ex:
+     * const def = [
+     *      ["obj", [["num", "Int8"],
+     *               ["greet", "Utf8WithLen"],
+     *               ["a1", "Int16*"]]
+     *      ],
+     *      ["a2", "Uint16*"]
+     *  ];
+     *  const o = {obj: {
+     *          num: 5,
+     *          greet: "Xin chào",
+     *          a1: [-3, 0, 4, 9, 0x7FFF],
+     *      },
+     *      a2: [3, 0, 4, 9, 0xFFFF]
+     *  });
+     *  ds.write(def, o);
+     *  expect: new DataStream(ds.buffer).read(def) deepEqual o
+     */
+    read(def: TypeDef): object {
+        const o = {};
+        let d: TypeDef1;
+        for (d of def) {
+            const v = d[0];
+            const t = d[1];
+            if (typeof t === "string") {
+                if (t.endsWith("*")) {
+                    const len = this.readUint16();
+                    o[v] = this["read" + t.substr(0, t.length - 1) + "Array"](
+                        len
+                    );
+                } else {
+                    o[v] = this["read" + t]();
+                }
+            } else {
+                o[v] = this.read(t);
+            }
+        }
+        return o;
+    }
+
+    /** ex:
+     * const def = [
+     *      ["obj", [["num", "Int8"],
+     *               ["greet", "Utf8WithLen"],
+     *               ["a1", "Int16*"]]
+     *      ],
+     *      ["a2", "Uint16*"]
+     *  ];
+     *  const o = {obj: {
+     *          num: 5,
+     *          greet: "Xin chào",
+     *          a1: [-3, 0, 4, 9, 0x7FFF],
+     *      },
+     *      a2: [3, 0, 4, 9, 0xFFFF]
+     *  });
+     *  ds.write(def, o);
+     *  expect: new DataStream(ds.buffer).read(def) deepEqual o
+     */
+    write(def: TypeDef, o: object): DataStream {
+        let d: TypeDef1;
+        for (d of def) {
+            const v = d[0];
+            const t = d[1];
+            if (typeof t === "string") {
+                if (t.endsWith("*")) {
+                    const arr: TypedArray | number[] = o[v];
+                    this.writeUint16(arr.length);
+                    this["write" + t.substr(0, t.length - 1) + "Array"](arr);
+                } else {
+                    this["write" + t](o[v]);
+                }
+            } else {
+                this.write(t, o[v]);
+            }
+        }
+        return this;
+    }
+
+    /** convenient method to write data. ex, instead of write data as in jsdoc of `write` method, we can:
+     * const def = [
+     *      ["Int8", "Utf8WithLen", "Int16*"],
+     *      "Uint16*"
+     *  ];
+     *  const a = [
+     *      [5, "Xin chào", [-3, 0, 4, 9, 0x7FFF]],
+     *      [3, 0, 4, 9, 0xFFFF]
+     *  ];
+     *  ds.writeArray(def, a)
+     */
+    writeArray(def: TypeArr, a: any[]): DataStream {
+        let t: Type | TypeArr;
+        let i: number;
+        for (i = 0; i < def.length; i++) {
+            t = def[i];
+            if (typeof t === "string") {
+                if (t.endsWith("*")) {
+                    const arr: TypedArray | number[] = a[i];
+                    this.writeUint16(arr.length);
+                    this["write" + t.substr(0, t.length - 1) + "Array"](arr);
+                } else {
+                    this["write" + t](a[i]);
+                }
+            } else {
+                this.writeArray(t, a[i]);
+            }
+        }
+        return this;
     }
 
     /**
@@ -1263,7 +1427,7 @@ export default class DataStream {
         str: string,
         endianness?: boolean,
         lengthOverride?: number
-    ): void {
+    ): DataStream {
         if (lengthOverride == null) {
             lengthOverride = str.length;
         }
@@ -1274,6 +1438,7 @@ export default class DataStream {
         for (; i < lengthOverride; i++) {
             this.writeUint16(0);
         }
+        return this;
     }
 
     /**
@@ -1304,7 +1469,7 @@ export default class DataStream {
      * Defaults to ASCII.
      * @param {?number} length The number of characters to write.
      */
-    writeString(s: string, encoding?: string, length?: number): void {
+    writeString(s: string, encoding?: string, length?: number): DataStream {
         if (encoding == null || encoding === "ASCII") {
             if (length != null) {
                 let i: number;
@@ -1325,6 +1490,19 @@ export default class DataStream {
                 new TextEncoder(encoding).encode(s.substring(0, length))
             );
         }
+        return this;
+    }
+
+    /** writeUint16(utf8 length of `s`) then write utf8 `s` */
+    writeUtf8WithLen(s: string): DataStream {
+        const arr = new TextEncoder("utf-8").encode(s);
+        return this.writeUint16(arr.length).writeUint8Array(arr);
+    }
+
+    /** readUint16 into `len` then read `len` Uint8 then parse into the result utf8 string */
+    readUtf8WithLen(): string {
+        const len = this.readUint16();
+        return new TextDecoder("utf-8").decode(this.mapUint8Array(len));
     }
 
     /**
@@ -1366,7 +1544,7 @@ export default class DataStream {
      * @param {string} s The string to write.
      * @param {?number} length The number of characters to write.
      */
-    writeCString(s: string, length?: number): void {
+    writeCString(s: string, length?: number): DataStream {
         if (length != null) {
             let i: number;
             const len = Math.min(s.length, length);
@@ -1382,6 +1560,7 @@ export default class DataStream {
             }
             this.writeUint8(0);
         }
+        return this;
     }
 
     /**
@@ -1622,12 +1801,14 @@ export default class DataStream {
      * @param {Object} struct The struct data object.
      * @param needConvertStructDef if set (== true) then structDefinition will be convert using
      *        `DataStream.defWriteStruct` before writing.
+     *
+     * @deprecated use DataStream.read/write(TypeDef) instead of readStruct/writeStruct
      */
     writeStruct(
         structDefinition: StructWrite[] | StructRead[],
         struct: object,
         needConvertStructDef: boolean = false
-    ) {
+    ): DataStream {
         if (needConvertStructDef) {
             structDefinition = DataStream.defWriteStruct(
                 structDefinition as StructRead[],
@@ -1642,6 +1823,7 @@ export default class DataStream {
                 struct
             );
         }
+        return this;
     }
 
     /**
@@ -1654,11 +1836,14 @@ export default class DataStream {
      * @side-effect struct is modified: struct.<some_len_var_name> is set = length of the string field
      *          (ex, struct.greet) after encode.
      */
-    static defWriteStruct(readStructDef: StructRead[], struct: object) {
-        const ret = [];
+    static defWriteStruct(
+        readStructDef: StructRead[],
+        struct: object
+    ): StructWrite[] {
+        const ret: StructWrite[] = [];
         for (let i = readStructDef.length - 2; i >= 0; i -= 2) {
             let t = readStructDef[i + 1];
-            const v = readStructDef[i];
+            const v = readStructDef[i] as string;
             if (typeof t === "string" && /,.+:[A-Za-z_]/.test(t)) {
                 let tp = t.split(":");
                 const len = tp[1];
@@ -1672,7 +1857,7 @@ export default class DataStream {
                 struct[len] = uint8Array.length;
                 ret.push(ds => ds.writeUint8Array(uint8Array));
             } else {
-                ret.push(t);
+                ret.push(t as StructWrite); // FIXME StructWriteFn is not compatible withi StructReadFn
             }
             ret.push(v);
         }
@@ -1686,11 +1871,13 @@ export default class DataStream {
      * @param {Object} v Value of data to write.
      * @param {Object} struct Struct to pass to write callback functions.
      */
-    writeType(t: StructWrite, v: any, struct: object) {
+    writeType(t: StructWrite, v: any, struct: object): DataStream {
         if (typeof t === "function") {
-            return t(this, v, struct);
+            t(this, v, struct);
+            return this;
         } else if (typeof t === "object" && !(t instanceof Array)) {
-            return t.set(this, v, struct);
+            t.set(this, v, struct);
+            return this;
         }
         let lengthOverride = null;
         let charset = "ASCII";
@@ -1821,5 +2008,6 @@ export default class DataStream {
             this._realloc(lengthOverride);
             this.position = pos + lengthOverride;
         }
+        return this;
     }
 }
