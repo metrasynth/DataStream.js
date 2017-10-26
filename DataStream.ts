@@ -1505,6 +1505,21 @@ export default class DataStream {
         return new TextDecoder("utf-8").decode(this.mapUint8Array(len));
     }
 
+    /** writeUint16(utf8 length of `s`) then write utf8 `s` */
+    writeUtf8WithLenBe(s: string): DataStream {
+        const arr = new TextEncoder("utf-8").encode(s);
+        return this.writeUint16(
+            arr.length,
+            DataStream.BIG_ENDIAN
+        ).writeUint8Array(arr);
+    }
+
+    /** readUint16 into `len` then read `len` Uint8 then parse into the result utf8 string */
+    readUtf8WithLenBe(): string {
+        const len = this.readUint16(DataStream.BIG_ENDIAN);
+        return new TextDecoder("utf-8").decode(this.mapUint8Array(len));
+    }
+
     /**
      * Read null-terminated string of desired length from the DataStream. Truncates
      * the returned string so that the null byte is not a part of it.
