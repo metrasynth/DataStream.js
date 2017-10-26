@@ -1,6 +1,6 @@
 {
   "name": "datastream-js",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "DataStream.js is a library for reading data from ArrayBuffers",
   "main": "index.js",
   "module": "es/index.js",
