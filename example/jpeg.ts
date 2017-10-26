@@ -1,4 +1,4 @@
-import DataStream from "../DataStream";
+import DataStream from "..";
 import jpeg = require("jpeg-js");
 
 document

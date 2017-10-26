@@ -6,5 +6,3 @@ node_modules/
 /example/**/*.js
 /example/**/*.js.map
 !webpack.config.js
-*.d.ts
-!/types/*.d.ts

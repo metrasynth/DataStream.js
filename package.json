@@ -2,8 +2,8 @@
   "name": "datastream-js",
   "version": "1.0.5",
   "description": "DataStream.js is a library for reading data from ArrayBuffers",
-  "main": "DataStream.js",
-  "module": "es/DataStream.js",
+  "main": "index.js",
+  "module": "es/index.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/ohze/DataStream.js.git"

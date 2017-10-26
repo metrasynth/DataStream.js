@@ -1,4 +1,4 @@
-import DataStream, {TypedArray, TypeDef} from "../DataStream";
+import DataStream, {TypedArray, TypeDef} from "..";
 import {expect, assert} from "chai";
 import "mocha";
 
