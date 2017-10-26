@@ -203,6 +203,10 @@ export default class DataStream {
         this._byteLength = this._byteOffset + v.byteLength;
     }
 
+    bigEndian(): DataStream {
+        this.endianness = DataStream.BIG_ENDIAN;
+        return this;
+    }
     /**
      * Internal function to resize the DataStream buffer when required.
      * @param {number} extra Number of bytes to add to the buffer allocation.
@@ -1502,21 +1506,6 @@ export default class DataStream {
     /** readUint16 into `len` then read `len` Uint8 then parse into the result utf8 string */
     readUtf8WithLen(): string {
         const len = this.readUint16();
-        return new TextDecoder("utf-8").decode(this.mapUint8Array(len));
-    }
-
-    /** writeUint16(utf8 length of `s`) then write utf8 `s` */
-    writeUtf8WithLenBe(s: string): DataStream {
-        const arr = new TextEncoder("utf-8").encode(s);
-        return this.writeUint16(
-            arr.length,
-            DataStream.BIG_ENDIAN
-        ).writeUint8Array(arr);
-    }
-
-    /** readUint16 into `len` then read `len` Uint8 then parse into the result utf8 string */
-    readUtf8WithLenBe(): string {
-        const len = this.readUint16(DataStream.BIG_ENDIAN);
         return new TextDecoder("utf-8").decode(this.mapUint8Array(len));
     }
 
