@@ -19,74 +19,74 @@ const TypedArrays = {
 
 // tslint:disable:no-shadowed-variable
 describe("DataStream", () => {
-    it("read/write", () => {
-        // prettier-ignore
-        const def: TypeDef = [
-            ["obj", [
-                ["num", "Int8"],
-                ["greet", "Utf8WithLen"],
-                ["a1", "Int16*"]]
-            ],
-            ["a2", "Uint16*"],
-            ["a3", "Int8*"],
-            ["a4", "Float64*"]
-        ];
-        // prettier-ignore
-        const o = {
-            obj: {
-                num: 5,
-                greet: "Xin chào",
-                a1: [-3, 0, 4, 9, 0x7FFF],
-            },
-            a2: [3, 0, 4, 9, 0xFFFF],
-            a3: [-3, 0, 4, 9, 0x7F],
-            a4: [-3, 0, 4, 9, 0xFFFFFFF + .321]
-        };
-        const d = new DataStream();
-        d.write(def, o);
-        let pos = 0;
-        const testResult = () => {
-            d.seek(pos);
-            const o2: any = d.read(def);
-            assert.equal(o2.obj.num, o.obj.num);
-            assert.equal(o2.obj.greet, o.obj.greet);
-            sameMembers(o2.obj.a1, o.obj.a1);
-            sameMembers(o2.a2, o.a2);
-            sameMembers(o2.a3, o.a3);
-            sameMembers(o2.a4, o.a4);
-        };
-        testResult();
-        pos = d.position;
-        // prettier-ignore
-        d.writeArray([
-            ["Int8", "Utf8WithLen", "Int16*"],
-            "Uint16*",
-            "Int8*",
-            "Float64*"
-        ], [
-            [5,  "Xin chào", [-3, 0, 4, 9, 0x7FFF]],
-            [3, 0, 4, 9, 0xFFFF],
-            [-3, 0, 4, 9, 0x7F],
-            [-3, 0, 4, 9, 0xFFFFFFF + .321]
-        ]);
-        testResult();
-    });
+    // it("read/write", () => {
+    //     // prettier-ignore
+    //     const def: TypeDef = [
+    //         ["obj", [
+    //             ["num", "Int8"],
+    //             ["greet", "Utf8WithLen"],
+    //             ["a1", "Int16*"]]
+    //         ],
+    //         ["a2", "Uint16*"],
+    //         ["a3", "Int8*"],
+    //         ["a4", "Float64*"]
+    //     ];
+    //     // prettier-ignore
+    //     const o = {
+    //         obj: {
+    //             num: 5,
+    //             greet: "Xin chào",
+    //             a1: [-3, 0, 4, 9, 0x7FFF],
+    //         },
+    //         a2: [3, 0, 4, 9, 0xFFFF],
+    //         a3: [-3, 0, 4, 9, 0x7F],
+    //         a4: [-3, 0, 4, 9, 0xFFFFFFF + .321]
+    //     };
+    //     const d = new DataStream();
+    //     d.write(def, o);
+    //     let pos = 0;
+    //     const testResult = () => {
+    //         d.seek(pos);
+    //         const o2: any = d.read(def);
+    //         assert.equal(o2.obj.num, o.obj.num);
+    //         assert.equal(o2.obj.greet, o.obj.greet);
+    //         sameMembers(o2.obj.a1, o.obj.a1);
+    //         sameMembers(o2.a2, o.a2);
+    //         sameMembers(o2.a3, o.a3);
+    //         sameMembers(o2.a4, o.a4);
+    //     };
+    //     testResult();
+    //     pos = d.position;
+    //     // prettier-ignore
+    //     d.writeArray([
+    //         ["Int8", "Utf8WithLen", "Int16*"],
+    //         "Uint16*",
+    //         "Int8*",
+    //         "Float64*"
+    //     ], [
+    //         [5,  "Xin chào", [-3, 0, 4, 9, 0x7FFF]],
+    //         [3, 0, 4, 9, 0xFFFF],
+    //         [-3, 0, 4, 9, 0x7F],
+    //         [-3, 0, 4, 9, 0xFFFFFFF + .321]
+    //     ]);
+    //     testResult();
+    // });
 
-    it("chained read/write utf8WithLen", () => {
-        const d = new DataStream();
-        const greet = "Xin chào";
-        d.writeInt8(3).writeUtf8WithLen(greet);
-        const d2 = new DataStream(d.buffer);
-        // prettier-ignore
-        const o = d2.readStruct([
-            "num", "int8",
-            "len", "uint16",
-            "greet", "string,utf-8:len"
-        ]);
-        assert.deepEqual(o, {num: 3, len: 9, greet});
-        d.seek(1);
-        expect(d.readUtf8WithLen()).equal(greet);
-    });
+    // it("chained read/write utf8WithLen", () => {
+    //     const d = new DataStream();
+    //     const greet = "Xin chào";
+    //     d.writeInt8(3).writeUtf8WithLen(greet);
+    //     const d2 = new DataStream(d.buffer);
+    //     // prettier-ignore
+    //     const o = d2.readStruct([
+    //         "num", "int8",
+    //         "len", "uint16",
+    //         "greet", "string,utf-8:len"
+    //     ]);
+    //     assert.deepEqual(o, {num: 3, len: 9, greet});
+    //     d.seek(1);
+    //     expect(d.readUtf8WithLen()).equal(greet);
+    // });
     const testType = (ds, t, elen) => {
         let i = 0;
         const boff = ds.byteOffset;
@@ -346,203 +346,203 @@ describe("DataStream", () => {
         }
     });
 
-    it("Struct", () => {
-        // prettier-ignore
-        const embed = [
-            "tag", "uint32be",
-            "code", "uint32le",
-            "greet", "cstring"
-        ];
-        // prettier-ignore
-        const def = [
-            "tag", "cstring:4",
-            "code", "uint32le",
-            "embed", embed,
-            "length", "uint16be",
-            "data", ["[]", "float32be", "length"],
-            "greet", "cstring:20",
-            "endNote", "uint8"
-        ];
-
-        // prettier-ignore
-        const u = [137,  80,  78,  71,   0, 136, 136, 254, 137,  80,
-            78,  71,   0, 136, 136, 255,  72, 101, 108, 108,
-            111,  44,  32,  87, 111, 114, 108, 100,  33,   0,
-            0,   2,   0,   1,   2,   3,   1,   2,   3,   4,
-            72, 101, 108, 108, 111,  44,  32,  87, 111, 114,
-            108, 100,  33,   0,   0,   0,   0,   0,   0,   0,
-            255];
-
-        const ds = new DataStream();
-        ds.writeUint8Array(u);
-        ds.writeUint8Array(u);
-        ds.seek(0);
-        const obj: any = ds.readStruct(def);
-        const obj2: any = ds.readStruct(def);
-        const d1 = obj.data;
-        const d2 = obj2.data;
-        delete obj.data;
-        delete obj2.data;
-        assert.equal(255, obj.endNote);
-        assert.equal(255, obj2.endNote);
-        expect(obj).to.deep.equal(obj2);
-        expect(d1).to.deep.equal(d2);
-        const p = ds.position;
-        obj.data = d1;
-        ds.writeStruct(def, obj);
-        delete obj.data;
-        ds.seek(p);
-        const obj3: any = ds.readStruct(def);
-        const d3 = obj3.data;
-        delete obj3.data;
-        ds.seek(p);
-        assert.equal(255, obj3.endNote);
-        sameMembers(ds.readUint8Array(u.length), u);
-        expect(obj).to.deep.equal(obj3);
-        expect(d1).to.deep.equal(d3);
-
-        // prettier-ignore
-        const def2 = [
-            "one", "float32",
-            "two", "float32be",
-            "three", "float32le",
-            "four", "float32"
-        ];
-        const u2 = [1, 1, 1, 1];
-        const ds2 = new DataStream();
-        ds2.writeFloat32Array(u2, DataStream.LITTLE_ENDIAN);
-        ds2.seek(0);
-        ds2.endianness = DataStream.LITTLE_ENDIAN;
-        let o2: any = ds2.readStruct(def2);
-        assert.equal(o2.one, 1);
-        assert.equal(o2.four, 1);
-        assert.notEqual(o2.two, o2.three);
-        assert.equal(o2.one, o2.four);
-        assert.equal(o2.one, o2.three);
-        assert.notEqual(o2.one /*LE*/, o2.two /*BE*/);
-        assert.equal(o2.one /*LE*/, o2.three /*LE*/);
-        ds2.seek(0);
-        ds2.endianness = DataStream.BIG_ENDIAN;
-        o2 = ds2.readStruct(def2);
-        assert.notEqual(o2.one, 1);
-        assert.notEqual(o2.four, 1);
-        assert.notEqual(o2.two, o2.three);
-        assert.equal(o2.one, o2.four);
-        assert.equal(o2.one /*BE*/, o2.two /*BE*/);
-        assert.notEqual(o2.one /*BE*/, o2.three /*LE*/);
-
-        // prettier-ignore
-        const def3 = [
-            "length", "uint16be",
-            "data", ["[]", "uint8", s => s.length - 2],
-            "endNote", "uint8"
-        ];
-        const u3 = [0, 8, 1, 2, 3, 4, 5, 6, 255];
-        const ds3 = new DataStream();
-        ds3.writeUint8Array(u3);
-        ds3.seek(0);
-        const o3: any = ds3.readStruct(def3);
-        assert.equal(o3.length, 8);
-        assert.equal(o3.endNote, 255);
-        sameMembers(o3.data, [1, 2, 3, 4, 5, 6]);
-
-        // prettier-ignore
-        const def4 = [
-            "length", "uint16be",
-            "data", {
-                get(ds, s) {
-                    const o = {odd: [], even: []};
-                    for (let i = 0; i < s.length - 2; i += 2) {
-                        o.odd.push(ds.readUint8());
-                        o.even.push(ds.readUint8());
-                    }
-                    return o;
-                },
-                set(ds, v) {
-                    for (let i = 0; i < v.odd.length; i++) {
-                        ds.writeUint8(v.odd[i]);
-                        ds.writeUint8(v.even[i]);
-                    }
-                }
-            },
-            "endNote", "uint8"
-        ];
-        const u4 = [0, 8, 1, 2, 3, 4, 5, 6, 255];
-        const ds4 = new DataStream(new Uint8Array(u4));
-        const o4: any = ds4.readStruct(def4);
-        assert.equal(o4.length, 8);
-        assert.equal(o4.endNote, 255);
-        expect(o4.data.odd).to.deep.equal([1, 3, 5]);
-        expect(o4.data.even).to.deep.equal([2, 4, 6]);
-        const pos = ds4.position;
-        ds4.writeStruct(def4, o4);
-        ds4.seek(pos);
-        const o4b = ds4.readStruct(def4);
-        expect(o4).to.deep.equal(o4b);
-        sameMembers(new Uint8Array(ds4.buffer), u4.concat(u4));
-
-        /* Test variable-length string definition */
-        // prettier-ignore
-        const def5 = [
-            "len", "uint8",
-            "greet", "cstring:len",
-            "pad", "string:2",
-            "len2", "uint8",
-            "greet2", "string:len2",
-            "tail", [[], "uint8", "*"]
-        ];
-
-        // prettier-ignore
-        const u5 = [5,
-            72, 101, 108, 108, 111, // "Hello"
-            44,  32, // ", "
-            6,
-            87, 111, 114, 108, 100,  33, // "World!"
-            0,   0,   0,   0,   0,   0,   0, 255];
-
-        const ds5 = new DataStream();
-        ds5.writeUint8Array(u5);
-        ds5.seek(0);
-        const o5: any = ds5.readStruct(def5);
-        assert.equal(o5.len, o5.greet.length);
-        assert.equal("Hello", o5.greet);
-        assert.equal(", ", o5.pad);
-        assert.equal(o5.len2, o5.greet2.length);
-        assert.equal("World!", o5.greet2);
-        sameMembers(o5.tail, [0, 0, 0, 0, 0, 0, 0, 255]);
-
-        const def6 = ["len", "uint8", "greet", "string,utf-8:len"];
-        const greet = "xin chào đỗữẫẨở";
-        // var greetData = new TextEncoder('utf-8').encode(greet);
-        // console.log(greetData, greetData.length, greet.length);
-        // prettier-ignore
-        const u6 = [27,
-            120, 105, 110, 32, 99, 104, 195, 160, 111, 32, 196, 145, 225, 187, 151, 225, 187, 175, 225, 186, 171, 225, 186, 168, 225, 187, 159
-        ];
-        const ds6 = new DataStream();
-        ds6.writeUint8Array(u6);
-        ds6.seek(0);
-        const o6: any = ds6.readStruct(def6);
-        assert.equal(greet, o6.greet);
-
-        const ds6b = new DataStream();
-        ds6b.writeStruct(def6, o6);
-
-        const ds6c = new DataStream();
-
-        // struct to write don't have 'len' field
-        ds6c.writeStruct(def6, {greet}, true);
-
-        ds6b.seek(0);
-        const o6b = ds6b.readStruct(def6);
-        ds6c.seek(0);
-        const o6c = ds6c.readStruct(def6);
-        expect(o6).to.deep.equal(o6b);
-        expect(o6).to.deep.equal(o6c);
-        sameMembers(new Uint8Array(ds6.buffer), u6);
-        sameMembers(new Uint8Array(ds6b.buffer), u6);
-        sameMembers(new Uint8Array(ds6c.buffer), u6);
-    });
+    // it("Struct", () => {
+    //     // prettier-ignore
+    //     const embed = [
+    //         "tag", "uint32be",
+    //         "code", "uint32le",
+    //         "greet", "cstring"
+    //     ];
+    //     // prettier-ignore
+    //     const def = [
+    //         "tag", "cstring:4",
+    //         "code", "uint32le",
+    //         "embed", embed,
+    //         "length", "uint16be",
+    //         "data", ["[]", "float32be", "length"],
+    //         "greet", "cstring:20",
+    //         "endNote", "uint8"
+    //     ];
+    //
+    //     // prettier-ignore
+    //     const u = [137,  80,  78,  71,   0, 136, 136, 254, 137,  80,
+    //         78,  71,   0, 136, 136, 255,  72, 101, 108, 108,
+    //         111,  44,  32,  87, 111, 114, 108, 100,  33,   0,
+    //         0,   2,   0,   1,   2,   3,   1,   2,   3,   4,
+    //         72, 101, 108, 108, 111,  44,  32,  87, 111, 114,
+    //         108, 100,  33,   0,   0,   0,   0,   0,   0,   0,
+    //         255];
+    //
+    //     const ds = new DataStream();
+    //     ds.writeUint8Array(u);
+    //     ds.writeUint8Array(u);
+    //     ds.seek(0);
+    //     const obj: any = ds.readStruct(def);
+    //     const obj2: any = ds.readStruct(def);
+    //     const d1 = obj.data;
+    //     const d2 = obj2.data;
+    //     delete obj.data;
+    //     delete obj2.data;
+    //     assert.equal(255, obj.endNote);
+    //     assert.equal(255, obj2.endNote);
+    //     expect(obj).to.deep.equal(obj2);
+    //     expect(d1).to.deep.equal(d2);
+    //     const p = ds.position;
+    //     obj.data = d1;
+    //     ds.writeStruct(def, obj);
+    //     delete obj.data;
+    //     ds.seek(p);
+    //     const obj3: any = ds.readStruct(def);
+    //     const d3 = obj3.data;
+    //     delete obj3.data;
+    //     ds.seek(p);
+    //     assert.equal(255, obj3.endNote);
+    //     sameMembers(ds.readUint8Array(u.length), u);
+    //     expect(obj).to.deep.equal(obj3);
+    //     expect(d1).to.deep.equal(d3);
+    //
+    //     // prettier-ignore
+    //     const def2 = [
+    //         "one", "float32",
+    //         "two", "float32be",
+    //         "three", "float32le",
+    //         "four", "float32"
+    //     ];
+    //     const u2 = [1, 1, 1, 1];
+    //     const ds2 = new DataStream();
+    //     ds2.writeFloat32Array(u2, DataStream.LITTLE_ENDIAN);
+    //     ds2.seek(0);
+    //     ds2.endianness = DataStream.LITTLE_ENDIAN;
+    //     let o2: any = ds2.readStruct(def2);
+    //     assert.equal(o2.one, 1);
+    //     assert.equal(o2.four, 1);
+    //     assert.notEqual(o2.two, o2.three);
+    //     assert.equal(o2.one, o2.four);
+    //     assert.equal(o2.one, o2.three);
+    //     assert.notEqual(o2.one /*LE*/, o2.two /*BE*/);
+    //     assert.equal(o2.one /*LE*/, o2.three /*LE*/);
+    //     ds2.seek(0);
+    //     ds2.endianness = DataStream.BIG_ENDIAN;
+    //     o2 = ds2.readStruct(def2);
+    //     assert.notEqual(o2.one, 1);
+    //     assert.notEqual(o2.four, 1);
+    //     assert.notEqual(o2.two, o2.three);
+    //     assert.equal(o2.one, o2.four);
+    //     assert.equal(o2.one /*BE*/, o2.two /*BE*/);
+    //     assert.notEqual(o2.one /*BE*/, o2.three /*LE*/);
+    //
+    //     // prettier-ignore
+    //     const def3 = [
+    //         "length", "uint16be",
+    //         "data", ["[]", "uint8", s => s.length - 2],
+    //         "endNote", "uint8"
+    //     ];
+    //     const u3 = [0, 8, 1, 2, 3, 4, 5, 6, 255];
+    //     const ds3 = new DataStream();
+    //     ds3.writeUint8Array(u3);
+    //     ds3.seek(0);
+    //     const o3: any = ds3.readStruct(def3);
+    //     assert.equal(o3.length, 8);
+    //     assert.equal(o3.endNote, 255);
+    //     sameMembers(o3.data, [1, 2, 3, 4, 5, 6]);
+    //
+    //     // prettier-ignore
+    //     const def4 = [
+    //         "length", "uint16be",
+    //         "data", {
+    //             get(ds, s) {
+    //                 const o = {odd: [], even: []};
+    //                 for (let i = 0; i < s.length - 2; i += 2) {
+    //                     o.odd.push(ds.readUint8());
+    //                     o.even.push(ds.readUint8());
+    //                 }
+    //                 return o;
+    //             },
+    //             set(ds, v) {
+    //                 for (let i = 0; i < v.odd.length; i++) {
+    //                     ds.writeUint8(v.odd[i]);
+    //                     ds.writeUint8(v.even[i]);
+    //                 }
+    //             }
+    //         },
+    //         "endNote", "uint8"
+    //     ];
+    //     const u4 = [0, 8, 1, 2, 3, 4, 5, 6, 255];
+    //     const ds4 = new DataStream(new Uint8Array(u4));
+    //     const o4: any = ds4.readStruct(def4);
+    //     assert.equal(o4.length, 8);
+    //     assert.equal(o4.endNote, 255);
+    //     expect(o4.data.odd).to.deep.equal([1, 3, 5]);
+    //     expect(o4.data.even).to.deep.equal([2, 4, 6]);
+    //     const pos = ds4.position;
+    //     ds4.writeStruct(def4, o4);
+    //     ds4.seek(pos);
+    //     const o4b = ds4.readStruct(def4);
+    //     expect(o4).to.deep.equal(o4b);
+    //     sameMembers(new Uint8Array(ds4.buffer), u4.concat(u4));
+    //
+    //     /* Test variable-length string definition */
+    //     // prettier-ignore
+    //     const def5 = [
+    //         "len", "uint8",
+    //         "greet", "cstring:len",
+    //         "pad", "string:2",
+    //         "len2", "uint8",
+    //         "greet2", "string:len2",
+    //         "tail", [[], "uint8", "*"]
+    //     ];
+    //
+    //     // prettier-ignore
+    //     const u5 = [5,
+    //         72, 101, 108, 108, 111, // "Hello"
+    //         44,  32, // ", "
+    //         6,
+    //         87, 111, 114, 108, 100,  33, // "World!"
+    //         0,   0,   0,   0,   0,   0,   0, 255];
+    //
+    //     const ds5 = new DataStream();
+    //     ds5.writeUint8Array(u5);
+    //     ds5.seek(0);
+    //     const o5: any = ds5.readStruct(def5);
+    //     assert.equal(o5.len, o5.greet.length);
+    //     assert.equal("Hello", o5.greet);
+    //     assert.equal(", ", o5.pad);
+    //     assert.equal(o5.len2, o5.greet2.length);
+    //     assert.equal("World!", o5.greet2);
+    //     sameMembers(o5.tail, [0, 0, 0, 0, 0, 0, 0, 255]);
+    //
+    //     const def6 = ["len", "uint8", "greet", "string,utf-8:len"];
+    //     const greet = "xin chào đỗữẫẨở";
+    //     // var greetData = new TextEncoder('utf-8').encode(greet);
+    //     // console.log(greetData, greetData.length, greet.length);
+    //     // prettier-ignore
+    //     const u6 = [27,
+    //         120, 105, 110, 32, 99, 104, 195, 160, 111, 32, 196, 145, 225, 187, 151, 225, 187, 175, 225, 186, 171, 225, 186, 168, 225, 187, 159
+    //     ];
+    //     const ds6 = new DataStream();
+    //     ds6.writeUint8Array(u6);
+    //     ds6.seek(0);
+    //     const o6: any = ds6.readStruct(def6);
+    //     assert.equal(greet, o6.greet);
+    //
+    //     const ds6b = new DataStream();
+    //     ds6b.writeStruct(def6, o6);
+    //
+    //     const ds6c = new DataStream();
+    //
+    //     // struct to write don't have 'len' field
+    //     ds6c.writeStruct(def6, {greet}, true);
+    //
+    //     ds6b.seek(0);
+    //     const o6b = ds6b.readStruct(def6);
+    //     ds6c.seek(0);
+    //     const o6c = ds6c.readStruct(def6);
+    //     expect(o6).to.deep.equal(o6b);
+    //     expect(o6).to.deep.equal(o6c);
+    //     sameMembers(new Uint8Array(ds6.buffer), u6);
+    //     sameMembers(new Uint8Array(ds6b.buffer), u6);
+    //     sameMembers(new Uint8Array(ds6c.buffer), u6);
+    // });
 
     it("endianness", () => {
         assert(

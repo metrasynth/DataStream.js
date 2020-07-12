@@ -1420,27 +1420,28 @@ export default class DataStream {
      *  ds.write(def, o);
      *  expect: new DataStream(ds.buffer).read(def) deepEqual o
      */
-    read(def: TypeDef): object {
-        const o = {};
-        let d: TypeDef1;
-        for (d of def) {
-            const v = d[0];
-            const t = d[1];
-            if (typeof t === "string") {
-                if (t.endsWith("*")) {
-                    const len = this.readUint16();
-                    o[v] = this["read" + t.substr(0, t.length - 1) + "Array"](
-                        len
-                    );
-                } else {
-                    o[v] = this["read" + t]();
-                }
-            } else {
-                o[v] = this.read(t);
-            }
-        }
-        return o;
-    }
+    // [TODO]
+    // read(def: TypeDef): object {
+    //     const o = {};
+    //     let d: TypeDef1;
+    //     for (d of def) {
+    //         const v = d[0];
+    //         const t = d[1];
+    //         if (typeof t === "string") {
+    //             if (t.endsWith("*")) {
+    //                 const len = this.readUint16();
+    //                 o[v] = this["read" + t.substr(0, t.length - 1) + "Array"](
+    //                     len
+    //                 );
+    //             } else {
+    //                 o[v] = this["read" + t]();
+    //             }
+    //         } else {
+    //             o[v] = this.read(t);
+    //         }
+    //     }
+    //     return o;
+    // }
 
     /** ex:
      * const def = [
@@ -1460,25 +1461,26 @@ export default class DataStream {
      *  ds.write(def, o);
      *  expect: new DataStream(ds.buffer).read(def) deepEqual o
      */
-    write(def: TypeDef, o: object): DataStream {
-        let d: TypeDef1;
-        for (d of def) {
-            const v = d[0];
-            const t = d[1];
-            if (typeof t === "string") {
-                if (t.endsWith("*")) {
-                    const arr: TypedArray | number[] = o[v];
-                    this.writeUint16(arr.length);
-                    this["write" + t.substr(0, t.length - 1) + "Array"](arr);
-                } else {
-                    this["write" + t](o[v]);
-                }
-            } else {
-                this.write(t, o[v]);
-            }
-        }
-        return this;
-    }
+    // [TODO]
+    // write(def: TypeDef, o: object): DataStream {
+    //     let d: TypeDef1;
+    //     for (d of def) {
+    //         const v = d[0];
+    //         const t = d[1];
+    //         if (typeof t === "string") {
+    //             if (t.endsWith("*")) {
+    //                 const arr: TypedArray | number[] = o[v];
+    //                 this.writeUint16(arr.length);
+    //                 this["write" + t.substr(0, t.length - 1) + "Array"](arr);
+    //             } else {
+    //                 this["write" + t](o[v]);
+    //             }
+    //         } else {
+    //             this.write(t, o[v]);
+    //         }
+    //     }
+    //     return this;
+    // }
 
     /** convenient method to write data. ex, instead of write data as in jsdoc of `write` method, we can:
      * const def = [
@@ -1491,25 +1493,26 @@ export default class DataStream {
      *  ];
      *  ds.writeArray(def, a)
      */
-    writeArray(def: TypeArr, a: any[]): DataStream {
-        let t: Type | TypeArr;
-        let i: number;
-        for (i = 0; i < def.length; i++) {
-            t = def[i];
-            if (typeof t === "string") {
-                if (t.endsWith("*")) {
-                    const arr: TypedArray | number[] = a[i];
-                    this.writeUint16(arr.length);
-                    this["write" + t.substr(0, t.length - 1) + "Array"](arr);
-                } else {
-                    this["write" + t](a[i]);
-                }
-            } else {
-                this.writeArray(t, a[i]);
-            }
-        }
-        return this;
-    }
+    // [TODO]
+    // writeArray(def: TypeArr, a: any[]): DataStream {
+    //     let t: Type | TypeArr;
+    //     let i: number;
+    //     for (i = 0; i < def.length; i++) {
+    //         t = def[i];
+    //         if (typeof t === "string") {
+    //             if (t.endsWith("*")) {
+    //                 const arr: TypedArray | number[] = a[i];
+    //                 this.writeUint16(arr.length);
+    //                 this["write" + t.substr(0, t.length - 1) + "Array"](arr);
+    //             } else {
+    //                 this["write" + t](a[i]);
+    //             }
+    //         } else {
+    //             this.writeArray(t, a[i]);
+    //         }
+    //     }
+    //     return this;
+    // }
 
     /**
      * Read UCS-2 string of desired length and endianness from the DataStream.
