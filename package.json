@@ -22,23 +22,20 @@
   },
   "homepage": "https://github.com/ohze/DataStream.js",
   "readmeFilename": "README.md",
-  "dependencies": {
-    "text-encoding": "^0.6.4"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "@types/chai": "^4.0.4",
-    "@types/mocha": "^2.2.43",
-    "@types/text-encoding": "0.0.32",
-    "chai": "^4.1.2",
-    "mocha": "^4.0.1",
-    "nyc": "^11.2.1",
-    "prettier": "^1.7.4",
-    "publish-please": "^2.3.1",
+    "@types/chai": "^4.2.11",
+    "@types/mocha": "^2.2.48",
+    "chai": "^4.2.0",
+    "mocha": "^4.1.0",
+    "nyc": "^11.9.0",
+    "prettier": "^1.19.1",
+    "publish-please": "^2.4.1",
     "ts-node": "^3.3.0",
-    "tslint": "^5.7.0",
-    "tslint-config-prettier": "^1.5.0",
+    "tslint": "^5.20.1",
+    "tslint-config-prettier": "^1.18.0",
     "tslint-config-standard": "^6.0.1",
-    "typescript": "^2.5.3"
+    "typescript": "^3.9.5"
   },
   "scripts": {
     "fmt": "prettier --write \"{.,test,example}/*.ts\"",
