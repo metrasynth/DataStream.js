@@ -50,5 +50,6 @@
   "prettier": {
     "bracketSpacing": false,
     "tabWidth": 4
-  }
+  },
+  "install": "npm run build"
 }
